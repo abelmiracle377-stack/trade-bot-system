@@ -21,7 +21,8 @@ install:
 	python -m pip install -r requirements.txt
 
 install-dev:
-	python -m pip install -r requirements.txt -r requirements-dev.txt
+	python -m pip install -r requirements-lock.txt
+	python -m pip check
 
 build:
 	python -m build
