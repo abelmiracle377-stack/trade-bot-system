@@ -1,7 +1,7 @@
 """Unit tests for risk manager."""
 
 import pandas as pd
-import numpy as np
+
 from src.risk.manager import RiskManager
 
 
@@ -14,19 +14,15 @@ def test_volatility_target_size():
 
 def test_stops():
     rm = RiskManager(stop_loss_pct=0.05, take_profit_pct=0.10)
-    # Long stop
     assert rm.apply_stops(entry_price=100, current_price=94, side=1) is True
-    # Long take-profit
     assert rm.apply_stops(entry_price=100, current_price=111, side=1) is True
-    # No hit
     assert rm.apply_stops(entry_price=100, current_price=102, side=1) is False
 
 
 def test_drawdown_check():
     rm = RiskManager(max_drawdown_pct=0.15)
-    equity = pd.Series([100, 110, 105, 90, 85])  # ~22% DD from 110
+    equity = pd.Series([100, 110, 105, 90, 85])
     assert rm.check_drawdown(equity) is True
-
     equity2 = pd.Series([100, 105, 102, 108])
     assert rm.check_drawdown(equity2) is False
 

@@ -2,7 +2,8 @@
 
 import pandas as pd
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
+
 from src.data.fetcher import DataFetcher
 
 
@@ -26,7 +27,6 @@ def test_fetch_uses_cache(tmp_path, sample_history):
     fetcher = DataFetcher(cache_dir=str(tmp_path))
     cache_file = tmp_path / "AAPL_2023-01-01_latest_1d.parquet"
     sample_history.to_parquet(cache_file)
-
     with patch("yfinance.Ticker") as mock_ticker:
         result = fetcher.fetch("AAPL", start="2023-01-01", use_cache=True)
         mock_ticker.assert_not_called()
@@ -36,7 +36,6 @@ def test_fetch_uses_cache(tmp_path, sample_history):
 
 def test_fetch_multiple_handles_failure(tmp_path):
     fetcher = DataFetcher(cache_dir=str(tmp_path))
-
     with patch.object(fetcher, "fetch") as mock_fetch:
         mock_fetch.side_effect = [
             pd.DataFrame({"Close": [1, 2, 3]}),
@@ -49,7 +48,6 @@ def test_fetch_multiple_handles_failure(tmp_path):
 
 def test_get_aligned_close(tmp_path, sample_history):
     fetcher = DataFetcher(cache_dir=str(tmp_path))
-
     with patch.object(fetcher, "fetch") as mock_fetch:
         mock_fetch.return_value = sample_history
         aligned = fetcher.get_aligned_close(["AAPL", "MSFT"], start="2023-01-01")
