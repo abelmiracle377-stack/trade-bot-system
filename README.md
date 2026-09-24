@@ -7,73 +7,126 @@ A modular, production-oriented **AI-powered quantitative trading system** writte
 
 It combines historical market data, rich technical feature engineering, machine-learning signal generation, volatility-targeted position sizing, stop-loss / take-profit rules, and a multi-asset backtester with realistic transaction costs.
 
-> **Disclaimer**: This is research / educational software only.  
-> It is **not** financial advice. Past performance does not guarantee future results.  
+> **Disclaimer**: This is research / educational software only.
+> It is **not** financial advice. Past performance does not guarantee future results.
 > Always paper-trade and fully understand the risks before using real capital.
 
 ---
 
-## Fresh Clone – Exact Commands Buyers Run
+## Fresh Clone – Install, Build, Test
 
-```bash
-git clone <repo-url> ai_trading_system
-cd ai_trading_system
+The repository is designed so a new checkout can be installed, built, and tested without live market credentials.
+
+~~~bash
+git clone https://github.com/abelmiracle377-stack/trade-bot-system.git
+cd trade-bot-system
 
 python -m venv .venv
 source .venv/bin/activate          # Windows: .venv\Scripts\activate
 
-pip install -r requirements.txt
-pip install -r requirements-dev.txt
+python -m pip install --upgrade pip
+python -m pip install -r requirements-lock.txt
+python -m pip check
 
-# THIS IS THE CRITICAL COMMAND – must succeed
-pytest tests/ -v --cov=src --cov-report=term-missing
+# Build the source distribution and wheel
+python -m build
 
-# Alternative
+# Run the complete test suite
+python -m pytest tests/ -v --cov=src --cov-report=term-missing --cov-fail-under=65
+~~~
+
+Equivalent Make targets:
+
+~~~bash
+make install-dev
+make build
 make test
-```
+~~~
 
-### Run tests in a completely isolated container
-```bash
+The integration suite can be run independently:
+
+~~~bash
+make integration
+# or
+python -m pytest tests/integration/ -v
+~~~
+
+The full local CI sequence is:
+
+~~~bash
+make ci
+~~~
+
+It installs the pinned development environment, builds the package, runs lint/format checks, and runs the coverage-gated test suite.
+
+### Run tests in an isolated container
+
+~~~bash
 docker compose run --rm test
 # or
 make docker-test
-```
+~~~
 
 ### Run the trading pipeline
-```bash
+
+~~~bash
 python main.py
 # or
 make run
-```
+~~~
+
+---
+
+## Architecture
+
+The system is organized as independent layers so market-data handling, feature engineering, machine-learning models, risk controls, and backtesting can be tested separately and together.
+
+- `src/data/` validates, fetches, caches, and aligns market data.
+- `src/features/` transforms OHLCV data into technical and statistical features.
+- `src/models/` trains chronological ML predictors and produces probabilities.
+- `src/strategies/` converts model outputs into trading signals.
+- `src/risk/` contains position sizing, stops, drawdown controls, and deterministic hard limits.
+- `src/backtest/` simulates multi-asset positions and calculates performance metrics.
+- `tests/integration/` verifies that these layers work together using deterministic local fixtures.
+
+The integration path is intentionally reproducible:
+
+~~~text
+OHLCV fixture
+    -> validation
+    -> feature engineering
+    -> chronological model training
+    -> probabilities/signals
+    -> backtest
+    -> equity + metrics
+~~~
 
 ---
 
 ## What the Test Suite Covers
 
-| File                        | What it tests                              |
-|-----------------------------|--------------------------------------------|
-| `tests/test_smoke.py`       | Imports, config loading, basic objects     |
-| `tests/test_data_fetcher.py`| Data fetching + caching (mocked)           |
-| `tests/test_features.py`    | Technical feature engineering              |
-| `tests/test_predictor.py`   | ML model fit / predict / save / load       |
-| `tests/test_signal.py`      | Signal generation from probabilities       |
-| `tests/test_risk.py`        | Position sizing, stops, drawdown checks    |
-| `tests/test_backtest.py`    | Full backtest engine + metrics             |
-| `tests/test_data_quality.py`| OHLCV structural and numerical validation  |
-| `tests/test_walk_forward.py`| Chronological splits + embargo              |
-| `tests/test_metrics.py`     | Sortino, Calmar, drawdown duration          |
-| `tests/test_risk_limits.py` | Deterministic hard risk limits              |
-| `tests/test_model_leakage.py`| Forward-target leakage regression checks   |
+| Area | Coverage |
+|---|---|
+| Data quality | OHLCV structure, timestamps, numerical constraints |
+| Data fetching | Fetching and caching with mocked provider behavior |
+| Features | Technical indicators and engineered returns |
+| Models | ML fit/predict, persistence, and chronological validation |
+| Leakage | Forward-return target and feature-leakage regressions |
+| Risk | Position sizing, stops, drawdown, hard limits, stale data |
+| Backtesting | Portfolio accounting, long/short positions, metrics |
+| Walk-forward | Chronological splits and embargo |
+| Integration | Data → features → model → signals → backtest |
+| Baselines | Comparison against naive strategies |
 
-All tests run **without network access** or external credentials.
+All tests use deterministic fixtures or mocks and do not require brokerage credentials or live orders.
 
 ---
 
 ## Project Structure
 
-```
+~~~text
 ai_trading_system/
-├── .github/workflows/ci.yml      # Lint + type + test on every push
+├── .github/workflows/ci.yml      # Lint + type + test + security on every push
 ├── config/config.yaml
 ├── src/
 │   ├── data/
@@ -84,43 +137,48 @@ ai_trading_system/
 │   ├── backtest/
 │   ├── portfolio/
 │   └── utils/
-├── tests/                        # Full pytest suite
+├── tests/
+│   ├── integration/              # Cross-component deterministic tests
+│   └── ...
 ├── main.py
-├── Dockerfile                    # Multi-stage (production + test)
+├── Dockerfile
 ├── docker-compose.yml
 ├── Makefile
 ├── pytest.ini
-├── requirements.txt              # Pinned runtime
-├── requirements-dev.txt
-├── requirements-lock.txt
-├── pyproject.toml
+├── requirements.txt              # Pinned runtime dependencies
+├── requirements-dev.txt          # Pinned development tooling
+├── requirements-lock.txt         # Reproducible runtime + development pins
+├── pyproject.toml                # Build/package metadata
 ├── .env.example
+├── SECURITY.md
 ├── CONTRIBUTING.md
 └── README.md
-```
+~~~
 
 ---
 
 ## Development Commands
 
-```bash
+~~~bash
 make help
 make install-dev
+make build
 make test
+make integration
 make lint
 make format
-make ci                 # full local CI
-make docker-test        # tests inside Docker
-make docker-run         # pipeline inside Docker
-```
+make ci
+make docker-test
+make docker-run
+~~~
 
 ---
 
 ## Configuration
 
-Edit `config/config.yaml` for symbols, model type, risk limits, etc.
+Edit `config/config.yaml` for symbols, model type, risk limits, validation settings, and backtest parameters.
 
-Copy `.env.example` → `.env` only if you later add live broker keys (never commit secrets).
+Copy `.env.example` to `.env` only when environment overrides are needed. Never commit real credentials.
 
 ---
 
@@ -129,9 +187,15 @@ Copy `.env.example` → `.env` only if you later add live broker keys (never com
 GitHub Actions (`.github/workflows/ci.yml`) runs on every push and pull request:
 
 - Multi-Python matrix (3.10 / 3.11 / 3.12)
+- Dependency installation and `pip check`
+- Python package build
 - Ruff lint + format check
-- Full pytest suite with coverage
-- Bandit + pip-audit security scans
+- mypy type checking
+- Full pytest suite with a 65% coverage gate
+- Bandit security scan
+- pip-audit dependency scan
+
+The repository also uses CodeQL and Dependabot for additional security and dependency maintenance.
 
 ---
 
@@ -142,7 +206,7 @@ GitHub Actions (`.github/workflows/ci.yml`) runs on every push and pull request:
 - Walk-forward validation → use `src/utils/walk_forward.py` with an embargo for forward-return labels
 - Market-data quality → validate OHLCV before caching with `src/data/validation.py`
 - Hard risk controls → use `src/risk/limits.py` as a deterministic gate before orders
-- Live trading → replace backtester with a broker connector and keep deterministic risk controls in front of any model recommendation
+- Live trading → replace the backtester with a broker connector and keep deterministic risk controls in front of any model recommendation
 
 ---
 
@@ -156,25 +220,17 @@ The package metadata also declares Apache-2.0 so tooling and package indexes can
 
 ## Experiment Tracking & Reproducibility
 
-Run a fully tracked experiment (logs parameters, model metrics, and backtest results):
+Run a fully tracked experiment:
 
-```bash
+~~~bash
 python scripts/run_experiment.py --config config/config.yaml
 python scripts/run_experiment.py --config config/config.yaml --run-id my_exp_001
-```
+~~~
 
 Results are appended to `reports/experiment_log.jsonl` and a per-run summary is written to `reports/<run_id>_summary.json`.
 
-Baseline comparison tests live in `tests/test_model_baseline.py` and verify the ML model outperforms naive strategies (always-long and moving-average crossover) on synthetic data.
-
 All runs are seeded via `config.yaml` → `model.random_state` for reproducibility.
-
-### Exact reproducible install
-
-```bash
-pip install -r requirements-lock.txt
-```
 
 ## Research Integrity Safeguards
 
-The system now includes chronological walk-forward split utilities with an optional embargo, OHLCV data-quality validation before caching, forward-target leakage regression tests, and additional risk-adjusted backtest metrics. Hard risk limits are represented separately from model logic so a model recommendation cannot override deterministic safety checks.
+The system includes chronological walk-forward split utilities with an optional embargo, OHLCV data-quality validation before caching, forward-target leakage regression tests, risk-adjusted backtest metrics, and deterministic hard risk limits separate from model logic.
