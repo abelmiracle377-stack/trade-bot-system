@@ -131,7 +131,7 @@ GitHub Actions (`.github/workflows/ci.yml`) runs on every push and pull request:
 - Multi-Python matrix (3.10 / 3.11 / 3.12)
 - Ruff lint + format check
 - Full pytest suite with coverage
-- Bandit + Safety security scans
+- Bandit + pip-audit security scans
 
 ---
 
