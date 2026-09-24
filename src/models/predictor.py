@@ -1,7 +1,7 @@
 """Machine-learning signal predictor with chronological validation."""
 
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Any, Dict, List
 
 import joblib
 import numpy as np
@@ -31,7 +31,7 @@ class SignalPredictor:
         self.target_horizon = target_horizon
         self.random_state = random_state
         self.model_params = model_params
-        self.model = None
+        self.model: Any = None
         self.feature_names: List[str] = []
         self.is_fitted = False
 
@@ -136,7 +136,8 @@ class SignalPredictor:
         joblib.dump(payload, Path(path))
 
     def load(self, path: str | Path) -> None:
-        payload = joblib.load(Path(path))
+        # Model files are trusted local artifacts produced by this application.
+        payload = joblib.load(Path(path))  # nosec B301
         self.model_type = payload["model_type"]
         self.target_horizon = payload["target_horizon"]
         self.random_state = payload["random_state"]
