@@ -2,12 +2,15 @@
 
 from dataclasses import dataclass
 from typing import Iterator
+
 import pandas as pd
+
 
 @dataclass(frozen=True)
 class WalkForwardSplit:
     train: pd.Index
     test: pd.Index
+
 
 def walk_forward_splits(
     index: pd.Index,
@@ -19,7 +22,7 @@ def walk_forward_splits(
 ) -> Iterator[WalkForwardSplit]:
     """Yield expanding-window train/test splits in chronological order.
 
-    embargo leaves observations immediately before each test window out of
+    Embargo leaves observations immediately before each test window out of
     training, reducing target-overlap leakage for forward-return labels.
     """
     if train_size <= 0 or test_size <= 0:
@@ -39,6 +42,6 @@ def walk_forward_splits(
         test_start = train_end + embargo
         yield WalkForwardSplit(
             train=index[:train_end],
-            test=index[test_start:test_start + test_size],
+            test=index[test_start : test_start + test_size],
         )
         train_end += step

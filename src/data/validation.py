@@ -2,13 +2,16 @@
 
 from dataclasses import dataclass, field
 from typing import List
+
 import pandas as pd
 
 REQUIRED_COLUMNS = ("Open", "High", "Low", "Close", "Volume")
 
+
 @dataclass
 class DataQualityReport:
     """Structured result from OHLCV validation."""
+
     valid: bool
     errors: List[str] = field(default_factory=list)
     warnings: List[str] = field(default_factory=list)
@@ -16,6 +19,7 @@ class DataQualityReport:
     def raise_if_invalid(self) -> None:
         if not self.valid:
             raise ValueError("Invalid market data: " + "; ".join(self.errors))
+
 
 def validate_ohlcv(
     df: pd.DataFrame,
@@ -58,5 +62,7 @@ def validate_ohlcv(
             errors.append("OHLC relationship is invalid for at least one row")
         returns = numeric["Close"].pct_change().abs()
         if max_return_pct is not None and (returns > max_return_pct).any():
-            warnings.append(f"Large absolute close-to-close return exceeds {max_return_pct:.0%}")
+            warnings.append(
+                f"Large absolute close-to-close return exceeds {max_return_pct:.0%}"
+            )
     return DataQualityReport(not errors, errors, warnings)

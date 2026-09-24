@@ -1,7 +1,9 @@
 """Tests for deterministic hard risk limits."""
 
 import pandas as pd
+
 from src.risk.limits import RiskLimits, evaluate_risk
+
 
 def test_daily_loss_blocks_trading():
     decision = evaluate_risk(
@@ -15,6 +17,7 @@ def test_daily_loss_blocks_trading():
     assert not decision.allowed
     assert "daily loss limit breached" in decision.reasons
 
+
 def test_leverage_limit_blocks_trading():
     decision = evaluate_risk(
         equity=100_000,
@@ -26,6 +29,7 @@ def test_leverage_limit_blocks_trading():
     )
     assert not decision.allowed
     assert "leverage limit breached" in decision.reasons
+
 
 def test_stale_data_blocks_trading():
     now = pd.Timestamp("2026-01-01 12:00", tz="UTC")
