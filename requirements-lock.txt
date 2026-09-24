@@ -18,5 +18,5 @@ pytest-mock==3.14.0
 ruff==0.6.8
 mypy==1.11.2
 bandit==1.9.4
-safety==3.8.1
+pip-audit==2.10.1
 pre-commit==3.8.0
