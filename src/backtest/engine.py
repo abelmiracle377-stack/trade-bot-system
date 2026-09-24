@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 from loguru import logger
 from dataclasses import dataclass, field
+from .metrics import sortino_ratio, max_drawdown_duration, calmar_ratio
 
 
 @dataclass
@@ -251,13 +252,19 @@ class Backtester:
         avg_win = np.mean([t.pnl for t in win_trades]) if win_trades else 0.0
         avg_loss = np.mean([t.pnl for t in loss_trades]) if loss_trades else 0.0
         profit_factor = abs(sum(t.pnl for t in win_trades) / sum(t.pnl for t in loss_trades)) if loss_trades and sum(t.pnl for t in loss_trades) != 0 else np.inf
+        sortino = sortino_ratio(rets, risk_free_rate=0.04)
+        calmar = calmar_ratio(cagr, max_dd)
+        drawdown_duration = max_drawdown_duration(equity)
 
         return {
             "total_return": total_return,
             "cagr": cagr,
             "volatility": vol,
             "sharpe": sharpe,
+            "sortino": sortino,
+            "calmar": calmar,
             "max_drawdown": max_dd,
+            "max_drawdown_duration": float(drawdown_duration),
             "n_trades": len(trades),
             "win_rate": win_rate,
             "avg_win": avg_win,
