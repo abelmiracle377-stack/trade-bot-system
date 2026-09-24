@@ -178,15 +178,10 @@ class Backtester:
                         cost = abs(shares * entry_price)
                         commission = cost * self.commission_pct
 
-                    cash -= (shares * entry_price + commission * np.sign(shares))  # careful with sign
-                    # Simpler: always subtract absolute cost + commission
-                    cash = cash - cost - commission + (0 if shares > 0 else 2 * cost)  # long vs short approx
-
-                    # Cleaner cash accounting for long-only simplicity
+                    # Long positions consume cash; short positions receive sale proceeds.
                     if desired_side > 0:
                         cash -= cost + commission
                     else:
-                        # Short: receive proceeds, pay commission
                         cash += cost - commission
 
                     positions[sym] = shares
