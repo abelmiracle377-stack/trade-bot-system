@@ -1,6 +1,5 @@
 """Signal generation from model probabilities."""
 
-from typing import Optional
 import pandas as pd
 from loguru import logger
 
