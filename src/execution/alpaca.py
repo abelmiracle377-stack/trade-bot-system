@@ -11,8 +11,8 @@ from dataclasses import dataclass
 from typing import Any
 
 from alpaca.trading.client import TradingClient
-from alpaca.trading.enums import OrderSide, TimeInForce
-from alpaca.trading.requests import MarketOrderRequest
+from alpaca.trading.enums import OrderSide, QueryOrderStatus, TimeInForce
+from alpaca.trading.requests import GetOrdersRequest, MarketOrderRequest
 
 
 @dataclass(frozen=True)
@@ -49,16 +49,33 @@ class AlpacaBroker:
         account = self.client.get_account()
         return float(account.equity)
 
+    def previous_day_equity(self) -> float:
+        """Return the broker's previous closing equity baseline."""
+        account = self.client.get_account()
+        return float(account.last_equity)
+
     def position_qty(self, symbol: str) -> float:
         """Return signed position quantity; zero when no position exists."""
-        try:
-            position = self.client.get_open_position(symbol)
-        except Exception as exc:
-            if "position does not exist" in str(exc).lower():
-                return 0.0
-            raise
-        qty = float(position.qty)
-        return qty if float(position.market_value) >= 0 else -qty
+        positions = self.client.get_all_positions()
+        for position in positions:
+            if position.symbol.upper() == symbol.upper():
+                qty = abs(float(position.qty))
+                side = str(position.side).lower()
+                return -qty if "short" in side else qty
+        return 0.0
+
+    def gross_exposure(self, _price: float | None = None) -> float:
+        """Return total gross market-value exposure across all positions."""
+        return sum(abs(float(position.market_value)) for position in self.client.get_all_positions())
+
+    def has_open_order(self, symbol: str) -> bool:
+        """Return whether an open order already exists for the symbol."""
+        request = GetOrdersRequest(
+            status=QueryOrderStatus.OPEN,
+            symbols=[symbol],
+            limit=500,
+        )
+        return bool(self.client.get_orders(filter=request))
 
     def submit_market_order(
         self,
@@ -73,6 +90,8 @@ class AlpacaBroker:
             raise ValueError("side must be +1 or -1")
         if qty <= 0:
             raise ValueError("qty must be positive")
+        if qty > 0:
+            qty = round(qty, 9)
 
         request = MarketOrderRequest(
             symbol=symbol,
