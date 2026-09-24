@@ -98,7 +98,7 @@ def run_pipeline(config_path: str = "config/config.yaml"):
                 random_state=model_cfg.get("random_state", 42),
             )
 
-            metrics = predictor.fit(
+            _metrics = predictor.fit(
                 featured,
                 feature_cols,
                 test_size=1.0 - model_cfg.get("train_test_split", 0.8),
