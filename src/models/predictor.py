@@ -20,7 +20,8 @@ class SignalPredictor:
         model_type: str = "xgboost",
         target_horizon: int = 5,
         random_state: int = 42,
-        **model_params,
+        model_params: Optional[Dict[str, Any]] = None,
+        **extra_params: Any,
     ):
         supported = {"xgboost", "random_forest", "logistic"}
         if model_type not in supported:
