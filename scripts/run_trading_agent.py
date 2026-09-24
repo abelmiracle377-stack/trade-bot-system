@@ -12,12 +12,17 @@ Never put broker credentials in source control.
 from __future__ import annotations
 
 import argparse
-from datetime import timezone
+from datetime import datetime, timezone
 
 from src.data import DataFetcher
 from src.features import FeatureEngineer
 from src.models import SignalPredictor
-from src.execution import AlpacaBroker, TradingAgent, TradingAgentConfig
+from src.execution import (
+    AlpacaBroker,
+    RiskStateStore,
+    TradingAgent,
+    TradingAgentConfig,
+)
 from src.utils import assert_valid_config, load_config, setup_logger
 
 
@@ -37,30 +42,35 @@ def run(config_path: str = "config/config.yaml", *, live: bool = False) -> None:
             max_leverage=cfg["risk"].get("max_portfolio_leverage", 1.0),
             max_daily_loss_pct=cfg["risk"].get("max_daily_loss_pct", 0.03),
             max_drawdown_pct=cfg["risk"].get("max_drawdown_pct", 0.25),
-            max_data_age_minutes=cfg["risk"].get("max_data_age_minutes", 180),
+            max_data_age_minutes=cfg["risk"].get("max_data_age_minutes", 5760),
         ),
     )
 
+    # Alpaca exposes the previous account equity, so the daily-loss baseline
+    # survives process restarts. The peak is persisted locally across cycles.
+    now = datetime.now(timezone.utc)
+    account_equity = broker.account_equity()
+    start_of_day_equity = broker.previous_day_equity()
+    state_store = RiskStateStore(cfg["risk"].get("state_file", "data/runtime/trading_state.json"))
+    state = state_store.load_or_initialize(now.date(), account_equity)
+    peak_equity = max(state.peak_equity, account_equity)
+    state.peak_equity = peak_equity
+    state_store.save(state)
+
     fetcher = DataFetcher(cache_dir=cfg["data"].get("cache_dir", "data/cache"))
-    engineer = FeatureEngineer(**{
-        "lookback_windows": cfg["features"].get("lookback_windows"),
-        "rsi_period": cfg["features"].get("rsi_period", 14),
-        "macd_fast": cfg["features"].get("macd_fast", 12),
-        "macd_slow": cfg["features"].get("macd_slow", 26),
-        "macd_signal": cfg["features"].get("macd_signal", 9),
-        "bb_period": cfg["features"].get("bb_period", 20),
-        "bb_std": cfg["features"].get("bb_std", 2.0),
-        "atr_period": cfg["features"].get("atr_period", 14),
-        "volume_ma_period": cfg["features"].get("volume_ma_period", 20),
-    })
+    engineer = FeatureEngineer(
+        lookback_windows=cfg["features"].get("lookback_windows"),
+        rsi_period=cfg["features"].get("rsi_period", 14),
+        macd_fast=cfg["features"].get("macd_fast", 12),
+        macd_slow=cfg["features"].get("macd_slow", 26),
+        macd_signal=cfg["features"].get("macd_signal", 9),
+        bb_period=cfg["features"].get("bb_period", 20),
+        bb_std=cfg["features"].get("bb_std", 2.0),
+        atr_period=cfg["features"].get("atr_period", 14),
+        volume_ma_period=cfg["features"].get("volume_ma_period", 20),
+    )
     model_cfg = cfg["model"]
     strat_cfg = cfg["strategy"]
-
-    account_equity = broker.account_equity()
-    # The broker does not expose historical equity here, so the current
-    # equity is used as a conservative starting point for this cycle.
-    start_of_day_equity = account_equity
-    peak_equity = account_equity
 
     for symbol in cfg["data"]["symbols"]:
         df = fetcher.fetch(
@@ -75,9 +85,7 @@ def run(config_path: str = "config/config.yaml", *, live: bool = False) -> None:
         predictor = SignalPredictor(
             model_type=model_cfg.get("type", "xgboost"),
             target_horizon=model_cfg.get("target_horizon", 5),
-            model_params=model_cfg.get(
-                model_cfg.get("type", "xgboost"), {}
-            ),
+            model_params=model_cfg.get(model_cfg.get("type", "xgboost"), {}),
             random_state=model_cfg.get("random_state", 42),
         )
         predictor.fit(
@@ -105,7 +113,7 @@ def run(config_path: str = "config/config.yaml", *, live: bool = False) -> None:
         else:
             data_timestamp = latest_timestamp.to_pydatetime()
 
-        agent.execute_signal(
+        result = agent.execute_signal(
             symbol=symbol,
             signal=signal,
             price=float(featured["Close"].iloc[-1]),
@@ -113,6 +121,10 @@ def run(config_path: str = "config/config.yaml", *, live: bool = False) -> None:
             start_of_day_equity=start_of_day_equity,
             peak_equity=peak_equity,
         )
+        if result is not None:
+            peak_equity = max(peak_equity, broker.account_equity())
+            state.peak_equity = peak_equity
+            state_store.save(state)
 
 
 def main() -> None:
