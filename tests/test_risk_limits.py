@@ -46,3 +46,16 @@ def test_stale_data_blocks_trading():
     )
     assert not decision.allowed
     assert "market data is stale" in decision.reasons
+
+
+def test_risk_reduction_can_pass_after_opening_kill_switch():
+    decision = evaluate_risk(
+        equity=96_000,
+        start_of_day_equity=100_000,
+        peak_equity=100_000,
+        gross_exposure=0,
+        position_exposure=0,
+        limits=RiskLimits(max_daily_loss_pct=0.03),
+        allow_risk_reduction=True,
+    )
+    assert decision.allowed

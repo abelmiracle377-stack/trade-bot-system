@@ -54,7 +54,7 @@ risk:
   take_profit_pct: 0.20
   max_drawdown_pct: 0.25
   max_daily_loss_pct: 0.03
-  max_data_age_minutes: 180
+  max_data_age_minutes: 5760  # daily-bar strategy; about four calendar days\n  state_file: "data/runtime/trading_state.json"
   volatility_target: 0.12  # annualized
   kelly_fraction: 0.25     # fractional Kelly
 
