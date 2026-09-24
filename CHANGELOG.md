@@ -1,18 +1,23 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+All notable changes to this project will be documented here.
 
 ## [0.2.1] - 2026-09-24
 
 ### Added
 - Config validation (`src/utils/validation.py`) with tests
 - SECURITY.md with threat model notes
+- Reproducible install/build/test workflow and pinned build tooling
+- End-to-end integration test covering data validation through backtesting
 - Dependabot configuration for weekly dependency updates
 - Per-symbol exception handling with full traceback logging in the main pipeline
 
 ### Changed
-- CI treats mypy / bandit / safety as blocking
+- CI runs a Python package build and explicit integration-test stage on every push/PR
+- CI treats mypy / bandit / pip-audit as blocking checks
 - Coverage gate at 65%
+- Package metadata pins runtime dependencies to match the reproducible requirements files
+- Testing documentation describes the deterministic integration pipeline
 
 ## [0.2.0] - 2026-09-24
 
