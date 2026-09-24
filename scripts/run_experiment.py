@@ -113,8 +113,7 @@ def run_experiment(config_path: str, run_id: str | None = None) -> dict:
     log_path = Path("reports/experiment_log.jsonl")
     log_path.parent.mkdir(exist_ok=True)
     with open(log_path, "a") as f:
-        f.write(json.dumps(experiment_record, default=str) + "
-")
+        f.write(json.dumps(experiment_record, default=str) + "\n")
     logger.info(f"Experiment complete. Metrics: {result.metrics}")
     logger.info(f"Logged to {log_path}")
     summary_path = Path(f"reports/{run_id}_summary.json")
