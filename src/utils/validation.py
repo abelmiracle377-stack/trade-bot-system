@@ -32,6 +32,10 @@ def validate_config(cfg: Dict[str, Any]) -> List[str]:
     if not isinstance(horizon, int) or horizon < 1 or horizon > 60:
         errors.append("'model.target_horizon' must be an integer between 1 and 60")
 
+    train_split = model.get("train_test_split", 0.8)
+    if not isinstance(train_split, (int, float)) or not 0 < train_split < 1:
+        errors.append("'model.train_test_split' must be a number in (0, 1)")
+
     risk = cfg.get("risk", {})
     for pct_key in ("max_position_pct", "stop_loss_pct", "take_profit_pct", "max_drawdown_pct"):
         val = risk.get(pct_key)
@@ -42,6 +46,11 @@ def validate_config(cfg: Dict[str, Any]) -> List[str]:
     capital = bt.get("initial_capital", 0)
     if not isinstance(capital, (int, float)) or capital <= 0:
         errors.append("'backtest.initial_capital' must be a positive number")
+
+    for pct_key in ("commission_pct", "slippage_pct"):
+        val = bt.get(pct_key)
+        if val is not None and (not isinstance(val, (int, float)) or val < 0 or val > 1):
+            errors.append(f"'backtest.{pct_key}' must be a number in [0, 1]")
 
     if errors:
         for e in errors:
