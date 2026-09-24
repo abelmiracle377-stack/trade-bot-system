@@ -51,7 +51,7 @@ def run(config_path: str = "config/config.yaml", *, live: bool = False) -> None:
     now = datetime.now(timezone.utc)
     account_equity = broker.account_equity()
     start_of_day_equity = broker.previous_day_equity()
-    state_store = RiskStateStore(cfg["risk"].get("state_file", "data/runtime/trading_state.json"))
+    state_store = RiskStateStore(\n        cfg["risk"].get("state_file", "data/runtime/trading_state.json")\n    )
     state = state_store.load_or_initialize(now.date(), account_equity)
     peak_equity = max(state.peak_equity, account_equity)
     state.peak_equity = peak_equity
