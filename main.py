@@ -103,6 +103,7 @@ def run_pipeline(config_path: str = "config/config.yaml"):
                 feature_cols,
                 test_size=1.0 - model_cfg.get("train_test_split", 0.8),
             )
+            logger.info(f"{sym} model metrics: {metrics}")
             models[sym] = predictor
 
             # Full-period probabilities → signals
