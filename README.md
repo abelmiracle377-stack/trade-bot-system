@@ -77,7 +77,7 @@ make run
 
 ### Run the broker trading agent
 
-The repository now includes a broker execution layer using Alpaca's official Python SDK. Alpaca supports paper trading with a separate paper environment, and its Trading API accepts market orders through the `/v2/orders` endpoint. The agent is deliberately **paper-first**. citeturn0search0turn0search8
+The repository now includes a broker execution layer using Alpaca's official Python SDK. Alpaca supports paper trading with a separate paper environment, and its Trading API accepts market orders through the `/v2/orders` endpoint. The agent is deliberately **paper-first**.
 
 Set credentials locally:
 
@@ -115,7 +115,7 @@ python scripts/run_trading_agent.py --live
 
 Do not enable live trading until the strategy has been independently validated in paper trading. Live orders can lose real money, and model/backtest performance does not guarantee future results.
 
-The agent uses Alpaca's live API only when `--live` is supplied and `ALLOW_LIVE_TRADING=YES`; otherwise it uses Alpaca's paper environment. Alpaca documents separate credentials/endpoints for paper and live trading. citeturn0search8turn0search4
+The agent uses Alpaca's live API only when `--live` is supplied and `ALLOW_LIVE_TRADING=YES`; otherwise it uses Alpaca's paper environment. Alpaca documents separate credentials/endpoints for paper and live trading.
 
 
 ~~~bash
