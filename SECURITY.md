@@ -14,7 +14,7 @@ If you discover a security issue, please open a private security advisory on Git
 ## Security Practices in This Project
 
 - **No hardcoded secrets** – API keys and credentials must be supplied via environment variables (see `.env.example`).
-- **Dependency scanning** – CI runs `bandit` and `safety` on every push.
+- **Dependency scanning** – CI runs `bandit` and `pip-audit` on every push.
 - **Non-root Docker** – The production image runs as an unprivileged user.
 - **Input handling** – Configuration is loaded from YAML; runtime market data is treated as untrusted input and sanitized by the data layer.
 - **Logging** – Structured logging is available; sensitive values should never be logged.
