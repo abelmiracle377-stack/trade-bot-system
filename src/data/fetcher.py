@@ -5,6 +5,7 @@ from typing import List, Optional
 import pandas as pd
 import yfinance as yf
 from loguru import logger
+from .validation import validate_ohlcv
 
 
 class DataFetcher:
@@ -49,6 +50,10 @@ class DataFetcher:
         df.index.name = "Date"
         df = df[["Open", "High", "Low", "Close", "Volume", "Adj Close"]].copy()
         df = df.dropna(subset=["Close"])
+        report = validate_ohlcv(df)
+        report.raise_if_invalid()
+        for warning in report.warnings:
+            logger.warning(f"{symbol} data-quality warning: {warning}")
 
         if use_cache:
             df.to_parquet(cache_file)
