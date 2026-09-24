@@ -36,6 +36,10 @@ class DataFetcher:
         if use_cache and cache_file.exists():
             logger.debug(f"Loading {symbol} from cache: {cache_file}")
             df = pd.read_parquet(cache_file)
+            report = validate_ohlcv(df)
+            report.raise_if_invalid()
+            for warning in report.warnings:
+                logger.warning(f"{symbol} cached data-quality warning: {warning}")
             return df
 
         logger.info(f"Downloading {symbol} from {start} to {end or 'today'} ({interval})")
