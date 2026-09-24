@@ -1,0 +1,67 @@
+# AI Trading System Configuration
+
+data:
+  symbols:
+    - AAPL
+    - MSFT
+    - GOOGL
+    - AMZN
+    - NVDA
+  start_date: "2018-01-01"
+  end_date: null          # null = today
+  interval: "1d"
+  cache_dir: "data/cache"
+
+features:
+  lookback_windows: [5, 10, 20, 50]
+  rsi_period: 14
+  macd_fast: 12
+  macd_slow: 26
+  macd_signal: 9
+  bb_period: 20
+  bb_std: 2.0
+  atr_period: 14
+  volume_ma_period: 20
+
+model:
+  type: "xgboost"         # xgboost | random_forest | logistic
+  target_horizon: 5       # predict return over next N days
+  train_test_split: 0.8
+  random_state: 42
+  xgboost:
+    n_estimators: 300
+    max_depth: 6
+    learning_rate: 0.05
+    subsample: 0.8
+    colsample_bytree: 0.8
+    reg_alpha: 0.1
+    reg_lambda: 1.0
+  random_forest:
+    n_estimators: 200
+    max_depth: 10
+    min_samples_leaf: 20
+
+strategy:
+  signal_threshold: 0.55   # probability threshold for long signal
+  short_threshold: 0.45    # probability threshold for short (if enabled)
+  allow_short: false
+  rebalance_frequency: "daily"
+
+risk:
+  max_position_pct: 0.15   # max % of portfolio per asset
+  max_portfolio_leverage: 1.0
+  stop_loss_pct: 0.08
+  take_profit_pct: 0.20
+  max_drawdown_pct: 0.25
+  volatility_target: 0.12  # annualized
+  kelly_fraction: 0.25     # fractional Kelly
+
+backtest:
+  initial_capital: 100000.0
+  commission_pct: 0.001    # 0.1%
+  slippage_pct: 0.0005     # 0.05%
+  risk_free_rate: 0.04
+
+logging:
+  level: "INFO"
+  file: "logs/trading_system.log"

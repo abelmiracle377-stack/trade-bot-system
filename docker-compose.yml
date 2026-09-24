@@ -1,0 +1,25 @@
+version: "3.8"
+
+services:
+  # Run the trading pipeline
+  trading-system:
+    build:
+      context: .
+      target: production
+    volumes:
+      - ./data:/app/data
+      - ./models:/app/models
+      - ./reports:/app/reports
+      - ./logs:/app/logs
+      - ./config:/app/config
+    environment:
+      - PYTHONUNBUFFERED=1
+
+  # Run the full test suite in isolation (what buyers care about)
+  test:
+    build:
+      context: .
+      target: test
+    volumes:
+      - .:/app
+    command: ["pytest", "tests/", "-v", "--cov=src", "--cov-report=term-missing"]
