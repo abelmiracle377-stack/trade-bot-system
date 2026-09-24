@@ -1,9 +1,8 @@
 """Simple multi-asset portfolio construction."""
 
-from typing import Dict, List
+from typing import Dict
 import pandas as pd
 import numpy as np
-from loguru import logger
 
 
 class PortfolioManager:
