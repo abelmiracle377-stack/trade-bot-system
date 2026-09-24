@@ -13,11 +13,7 @@ AI Trading System – End-to-End Pipeline
 For tracked experiments with logging see: python scripts/run_experiment.py
 """
 
-import sys
 from pathlib import Path
-
-# Allow running from project root
-sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from src.utils import load_config, setup_logger, assert_valid_config
 from src.data import DataFetcher
