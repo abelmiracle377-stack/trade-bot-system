@@ -31,7 +31,8 @@ class SignalPredictor:
         self.model_type = model_type
         self.target_horizon = target_horizon
         self.random_state = random_state
-        self.model_params = model_params
+        self.model_params: Dict[str, Any] = dict(model_params or {})
+        self.model_params.update(extra_params)
         self.model: Any = None
         self.feature_names: List[str] = []
         self.is_fitted = False
