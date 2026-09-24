@@ -17,5 +17,33 @@ For this trading system, important failure-path scenarios include:
 - broker/API timeouts and rate limits;
 - drawdown and risk-limit breaches.
 
+## Integration tests
+
+Integration tests exercise multiple trading-system layers together using
+deterministic local fixtures. They do not call Yahoo Finance, require API
+credentials, or place orders.
+
+Run them with:
+
+```bash
+pytest tests/integration/ -v
+```
+
+The main pipeline test covers:
+
+```text
+OHLCV fixture
+    -> data-quality validation
+    -> technical feature engineering
+    -> chronological ML training
+    -> model probabilities
+    -> trading signals
+    -> backtest engine
+    -> equity and performance metrics
+```
+
+This keeps the integration suite reproducible on a fresh checkout while still
+checking that the major components can work together.
+
 Tests should use deterministic fixtures and mocked external services. They
 must never require real brokerage credentials or place real orders.
