@@ -4,10 +4,22 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ai-trading-system"
-version = "0.1.0"
+version = "0.2.1"
 description = "Modular AI-powered quantitative trading system"
 readme = "README.md"
 requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [{ name = "Abel Miracle", email = "abelmiracle377@gmail.com" }]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dynamic = []
 dependencies = [
     "numpy>=1.24.0",
     "pandas>=2.0.0",
@@ -20,6 +32,12 @@ dependencies = [
     "loguru>=0.7.0",
     "matplotlib>=3.7.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/abelmiracle377-stack/trade-bot-system"
+Repository = "https://github.com/abelmiracle377-stack/trade-bot-system"
+Issues = "https://github.com/abelmiracle377-stack/trade-bot-system/issues"
+License = "https://www.apache.org/licenses/LICENSE-2.0"
 
 [project.optional-dependencies]
 dev = [
