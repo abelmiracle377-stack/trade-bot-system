@@ -66,7 +66,7 @@ class AlpacaBroker:
 
     def gross_exposure(self, _price: float | None = None) -> float:
         """Return total gross market-value exposure across all positions."""
-        return sum(abs(float(position.market_value)) for position in self.client.get_all_positions())
+        return sum(\n            abs(float(position.market_value))\n            for position in self.client.get_all_positions()\n        )
 
     def has_open_order(self, symbol: str) -> bool:
         """Return whether an open order already exists for the symbol."""
