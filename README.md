@@ -59,6 +59,11 @@ make run
 | `tests/test_signal.py`      | Signal generation from probabilities       |
 | `tests/test_risk.py`        | Position sizing, stops, drawdown checks    |
 | `tests/test_backtest.py`    | Full backtest engine + metrics             |
+| `tests/test_data_quality.py`| OHLCV structural and numerical validation  |
+| `tests/test_walk_forward.py`| Chronological splits + embargo              |
+| `tests/test_metrics.py`     | Sortino, Calmar, drawdown duration          |
+| `tests/test_risk_limits.py` | Deterministic hard risk limits              |
+| `tests/test_model_leakage.py`| Forward-target leakage regression checks   |
 
 All tests run **without network access** or external credentials.
 
@@ -134,7 +139,10 @@ GitHub Actions (`.github/workflows/ci.yml`) runs on every push and pull request:
 
 - New model → implement `fit` / `predict_proba` / `save` / `load` in `src/models/`
 - Change prediction target → edit `_create_target` in `SignalPredictor`
-- Live trading → replace backtester with a broker connector
+- Walk-forward validation → use `src/utils/walk_forward.py` with an embargo for forward-return labels
+- Market-data quality → validate OHLCV before caching with `src/data/validation.py`
+- Hard risk controls → use `src/risk/limits.py` as a deterministic gate before orders
+- Live trading → replace backtester with a broker connector and keep deterministic risk controls in front of any model recommendation
 
 ---
 
@@ -166,3 +174,7 @@ All runs are seeded via `config.yaml` → `model.random_state` for reproducibili
 ```bash
 pip install -r requirements-lock.txt
 ```
+
+## Research Integrity Safeguards
+
+The system now includes chronological walk-forward split utilities with an optional embargo, OHLCV data-quality validation before caching, forward-target leakage regression tests, and additional risk-adjusted backtest metrics. Hard risk limits are represented separately from model logic so a model recommendation cannot override deterministic safety checks.
