@@ -53,5 +53,7 @@ jobs:
           python -m pip check
       - name: Bandit security scan
         run: python -m bandit -r src/ -ll -ii
-      - name: Safety dependency scan
-        run: python -m safety scan --target .
+      - name: Audit dependencies
+        uses: pypa/gh-action-pip-audit@v1.1.0
+        with:
+          inputs: requirements.txt
