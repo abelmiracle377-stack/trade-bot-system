@@ -86,6 +86,17 @@ def run(config_path: str = "config/config.yaml", *, live: bool = False) -> None:
         featured = engineer.transform(df)
         feature_cols = engineer.get_feature_columns(featured)
 
+        if learning_enabled:
+            learner.resolve_pending(symbol, featured)
+            learning_metrics = learner.fit()
+            logger.info(
+                "Learning state for {}: samples={}, active={}, metrics={}",
+                symbol,
+                int(learning_metrics.get("samples", 0)),
+                int(learning_metrics.get("active", 0)),
+                learning_metrics,
+            )
+
         predictor = SignalPredictor(
             model_type=model_cfg.get("type", "xgboost"),
             target_horizon=model_cfg.get("target_horizon", 5),
@@ -117,10 +128,27 @@ def run(config_path: str = "config/config.yaml", *, live: bool = False) -> None:
         else:
             data_timestamp = latest_timestamp.to_pydatetime()
 
+        entry_price = float(featured["Close"].iloc[-1])
+        if learning_enabled and signal != 0:
+            learner.record_prediction(
+                signal_id=f"{symbol.lower()}-{uuid4().hex}",
+                symbol=symbol,
+                direction=signal,
+                probability=latest_probability,
+                entry_price=entry_price,
+                signal_time=latest_timestamp,
+                horizon_bars=int(model_cfg.get("target_horizon", 5)),
+                model_version=(
+                    f"{model_cfg.get('type', 'xgboost')}:"
+                    f"h{model_cfg.get('target_horizon', 5)}:"
+                    f"rs{model_cfg.get('random_state', 42)}"
+                ),
+            )
+
         result = agent.execute_signal(
             symbol=symbol,
             signal=signal,
-            price=float(featured["Close"].iloc[-1]),
+            price=entry_price,
             data_timestamp=data_timestamp,
             start_of_day_equity=start_of_day_equity,
             peak_equity=peak_equity,
