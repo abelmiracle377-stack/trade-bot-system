@@ -41,9 +41,6 @@ def test_assert_valid_config_raises():
 
 def test_load_config_rejects_non_mapping(tmp_path):
     config = tmp_path / "bad.yaml"
-    config.write_text("- not
-- a
-- mapping
-", encoding="utf-8")
+    config.write_text("- not\n- a\n- mapping\n", encoding="utf-8")
     with pytest.raises(ValueError, match="Configuration root"):
         load_config(config)
