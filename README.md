@@ -104,6 +104,17 @@ The agent:
 6. Applies deterministic daily-loss, drawdown, leverage, position-size, and data-age limits.
 7. Submits a market order only when the risk gate allows it.
 
+### Automated paper-trading agent
+
+GitHub Actions can run the broker agent automatically on a weekday schedule in **paper-trading mode**. Configure these repository secrets:
+
+- `ALPACA_PAPER_API_KEY`
+- `ALPACA_PAPER_API_SECRET`
+
+The workflow is `.github/workflows/trading-agent.yml`. It can also be started manually from the GitHub Actions tab.
+
+The scheduled workflow explicitly sets `ALLOW_LIVE_TRADING=NO`, so it cannot enable live execution. It uploads the run logs and runtime risk state as short-lived GitHub Actions artifacts for inspection.
+
 ### Live trading
 
 Live execution is **explicitly disabled by default**. To enable the live adapter, both conditions are required:
