@@ -1,6 +1,6 @@
 """Vectorized + event-driven hybrid backtester."""
 
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, cast
 import numpy as np
 import pandas as pd
 from loguru import logger
@@ -282,8 +282,8 @@ class Backtester:
             "max_drawdown_duration": float(drawdown_duration),
             "n_trades": len(trades),
             "win_rate": win_rate,
-            "avg_win": float(avg_win),
-            "avg_loss": float(avg_loss),
+            "avg_win": cast(float, avg_win),
+            "avg_loss": cast(float, avg_loss),
             "profit_factor": profit_factor,
             "final_equity": float(equity.iloc[-1]),
         }
