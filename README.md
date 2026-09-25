@@ -17,7 +17,8 @@
   <a href="#-architecture">Architecture</a> ·
   <a href="#-paper-trading-agent">Agent</a> ·
   <a href="#-research--experiments">Research</a> ·
-  <a href="#-quickstart">Quickstart</a>
+  <a href="#-quickstart">Quickstart</a> ·
+  <a href="docs/">Dashboard</a>
 </p>
 
 > **Research / educational software.** This project is not financial advice and does not guarantee trading performance. Keep execution in paper mode until the strategy, infrastructure, and operational controls have been independently validated.
@@ -400,7 +401,7 @@ Live credentials must never be committed to the repository or pasted into issues
 - [x] Telegram / multi-user foundation
 
 ### Next platform layer
-- [ ] Web monitoring dashboard
+- [x] Web monitoring dashboard
 - [ ] Real-time agent status
 - [ ] Equity / drawdown charts from actual run data
 - [ ] Signal history explorer
