@@ -53,6 +53,7 @@ def run_experiment(config_path: str, run_id: str | None = None) -> dict:
 
     prices, signals, vols = {}, {}, {}
     model_metrics = {}
+    model_metadata = {}
 
     for sym, df in raw_data.items():
         try:
@@ -70,6 +71,7 @@ def run_experiment(config_path: str, run_id: str | None = None) -> dict:
                 test_size=1.0 - model_cfg.get("train_test_split", 0.8),
             )
             model_metrics[sym] = metrics
+            model_metadata[sym] = predictor.metadata()
             proba = predictor.predict_proba(featured)
             signals[sym] = signal_gen.generate(proba)
             prices[sym] = featured
@@ -107,6 +109,7 @@ def run_experiment(config_path: str, run_id: str | None = None) -> dict:
         "target_horizon": model_cfg.get("target_horizon"),
         "random_state": model_cfg.get("random_state", 42),
         "model_metrics": model_metrics,
+        "model_metadata": model_metadata,
         "backtest_metrics": result.metrics,
         "n_trades": result.metrics.get("n_trades", 0),
     }
