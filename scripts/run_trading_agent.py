@@ -12,8 +12,12 @@ Never put broker credentials in source control.
 from __future__ import annotations
 
 import argparse
+import json
 from datetime import datetime, timezone
+from pathlib import Path
 from uuid import uuid4
+
+from loguru import logger
 
 from src.data import DataFetcher
 from src.features import FeatureEngineer
@@ -28,7 +32,7 @@ from src.execution import (
 from src.utils import assert_valid_config, load_config, setup_logger
 
 
-def run(config_path: str = "config/config.yaml", *, live: bool = False) -> None:
+def _run_cycle(config_path: str = "config/config.yaml", *, live: bool = False) -> None:
     cfg = load_config(config_path)
     assert_valid_config(cfg)
     setup_logger(
@@ -179,6 +183,31 @@ def run(config_path: str = "config/config.yaml", *, live: bool = False) -> None:
             state.peak_equity = peak_equity
             state_store.save(state)
 
+
+def _write_run_status(path: str, *, status: str, error: str | None = None) -> None:
+    """Persist the latest agent-cycle status for local/CI health checks."""
+    target = Path(path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "status": status,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
+    if error:
+        payload["error"] = error
+    target.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+
+
+def run(config_path: str = "config/config.yaml", *, live: bool = False) -> None:
+    """Run one cycle and persist success/failure status without hiding failures."""
+    status_path = "data/runtime/last_run_status.json"
+    try:
+        _run_cycle(config_path, live=live)
+    except Exception as exc:
+        logger.exception("Trading agent cycle failed: {}", exc)
+        _write_run_status(status_path, status="failed", error=str(exc))
+        raise
+    else:
+        _write_run_status(status_path, status="success")
 
 def main() -> None:
     parser = argparse.ArgumentParser()
