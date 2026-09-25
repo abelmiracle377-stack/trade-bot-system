@@ -79,3 +79,27 @@ def test_model_has_positive_auc(synthetic_trending_data):
     model = SignalPredictor(model_type="random_forest", target_horizon=5, random_state=42)
     metrics = model.fit(featured, feature_cols, test_size=0.25)
     assert metrics["roc_auc"] >= 0.50
+
+
+def test_model_metadata_contains_reproducibility_fields(synthetic_trending_data):
+    eng = FeatureEngineer()
+    featured = eng.transform(synthetic_trending_data)
+    feature_cols = eng.get_feature_columns(featured)
+    model = SignalPredictor(
+        model_type="random_forest",
+        target_horizon=5,
+        random_state=42,
+        model_params={"n_estimators": 25},
+    )
+    model.fit(featured, feature_cols, test_size=0.25)
+
+    metadata = model.metadata()
+
+    assert metadata["model_type"] == "random_forest"
+    assert metadata["target_horizon"] == 5
+    assert metadata["random_state"] == 42
+    assert metadata["model_params"]["n_estimators"] == 25
+    assert metadata["feature_names"] == feature_cols
+    assert set(metadata["feature_importances"]) == set(feature_cols)
+    assert all(isinstance(value, float) for value in metadata["feature_importances"].values())
+    assert metadata["fitted_model_params"]["random_state"] == 42
