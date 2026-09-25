@@ -111,6 +111,38 @@ class SignalPredictor:
             metrics["roc_auc"] = 0.5
         return metrics
 
+    def metadata(self) -> Dict[str, Any]:
+        """Return reproducibility and fitted-model metadata for experiment tracking."""
+        if not self.is_fitted or self.model is None:
+            raise RuntimeError("Model is not fitted")
+
+        params = self.model.get_params() if hasattr(self.model, "get_params") else {}
+        feature_importances: Dict[str, float] = {}
+        raw_importances = getattr(self.model, "feature_importances_", None)
+        if raw_importances is not None:
+            feature_importances = {
+                name: float(value)
+                for name, value in zip(self.feature_names, raw_importances)
+            }
+        else:
+            coefficients = getattr(self.model, "coef_", None)
+            if coefficients is not None:
+                values = np.asarray(coefficients).reshape(-1)
+                feature_importances = {
+                    name: float(value)
+                    for name, value in zip(self.feature_names, values)
+                }
+
+        return {
+            "model_type": self.model_type,
+            "target_horizon": self.target_horizon,
+            "random_state": self.random_state,
+            "model_params": self.model_params,
+            "fitted_model_params": params,
+            "feature_names": list(self.feature_names),
+            "feature_importances": feature_importances,
+        }
+
     def predict_proba(self, df: pd.DataFrame) -> pd.Series:
         if not self.is_fitted or self.model is None:
             raise RuntimeError("Model is not fitted")
