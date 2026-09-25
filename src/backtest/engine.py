@@ -60,12 +60,14 @@ class Backtester:
         prices and signals must share a common DatetimeIndex (aligned).
         """
         # Align all series on common dates
-        common_idx = None
+        common_idx: pd.Index | None = None
         for s in signals.values():
             common_idx = s.index if common_idx is None else common_idx.intersection(s.index)
         for df in prices.values():
             common_idx = common_idx.intersection(df.index)
 
+        if common_idx is None:
+            raise ValueError("No signal data supplied for backtest")
         common_idx = common_idx.sort_values()
         if len(common_idx) < 10:
             raise ValueError("Insufficient overlapping data for backtest")
@@ -283,5 +285,5 @@ class Backtester:
             "avg_win": avg_win,
             "avg_loss": avg_loss,
             "profit_factor": profit_factor,
-            "final_equity": equity.iloc[-1],
+            "final_equity": float(equity.iloc[-1]),
         }
