@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, cast
 
 from alpaca.trading.client import TradingClient
 from alpaca.trading.enums import OrderSide, QueryOrderStatus, TimeInForce
@@ -31,9 +31,7 @@ class AlpacaBroker:
         key = os.getenv("ALPACA_API_KEY")
         secret = os.getenv("ALPACA_API_SECRET")
         if not key or not secret:
-            raise RuntimeError(
-                "ALPACA_API_KEY and ALPACA_API_SECRET must be set"
-            )
+            raise RuntimeError("ALPACA_API_KEY and ALPACA_API_SECRET must be set")
 
         if not paper and os.getenv("ALLOW_LIVE_TRADING") != "YES":
             raise RuntimeError(
@@ -46,17 +44,17 @@ class AlpacaBroker:
 
     def account_equity(self) -> float:
         """Return current account equity."""
-        account = self.client.get_account()
+        account = cast(Any, self.client.get_account())
         return float(account.equity)
 
     def previous_day_equity(self) -> float:
         """Return the broker's previous closing equity baseline."""
-        account = self.client.get_account()
+        account = cast(Any, self.client.get_account())
         return float(account.last_equity)
 
     def position_qty(self, symbol: str) -> float:
         """Return signed position quantity; zero when no position exists."""
-        positions = self.client.get_all_positions()
+        positions = cast(list[Any], self.client.get_all_positions())
         for position in positions:
             if position.symbol.upper() == symbol.upper():
                 qty = abs(float(position.qty))
@@ -66,10 +64,8 @@ class AlpacaBroker:
 
     def gross_exposure(self, _price: float | None = None) -> float:
         """Return total gross market-value exposure across all positions."""
-        return sum(
-            abs(float(position.market_value))
-            for position in self.client.get_all_positions()
-        )
+        positions = cast(list[Any], self.client.get_all_positions())
+        return sum(abs(float(position.market_value)) for position in positions)
 
     def has_open_order(self, symbol: str) -> bool:
         """Return whether an open order already exists for the symbol."""
@@ -103,7 +99,7 @@ class AlpacaBroker:
             time_in_force=TimeInForce.DAY,
             client_order_id=client_order_id,
         )
-        order = self.client.submit_order(order_data=request)
+        order = cast(Any, self.client.submit_order(order_data=request))
         return BrokerOrder(
             symbol=symbol,
             side="buy" if side > 0 else "sell",

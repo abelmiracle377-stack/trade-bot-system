@@ -15,7 +15,27 @@ Please include the affected version/commit, affected component, reproduction ste
 
 ## Threat Model
 
-This project is primarily a research and backtesting system. It does not place live orders by default. Its security boundary is therefore different from that of a deployed brokerage service.
+This project is primarily a research and paper-trading system. Live order submission is a separate, explicit path. The main trust boundaries are the source repository, CI runner, runtime filesystem, market-data providers, and Alpaca broker credentials/API.
+
+### Trust boundaries and failure modes
+
+| Boundary | Protected asset | Threat | Mitigation | Residual risk |
+|---|---|---|---|---|
+| GitHub repository → CI runner | Source code and workflow configuration | Malicious dependency or workflow change | Read-only checkout, pinned dependencies, Ruff, mypy, Bandit, pip-audit, CodeQL | Repository compromise can still alter trusted automation |
+| CI secret store → agent | Alpaca API credentials | Credential disclosure or misuse | Secrets are injected through GitHub Actions; no credentials in source; paper mode sets ALLOW_LIVE_TRADING=NO | A compromised runner/workflow could still access injected secrets |
+| Runtime → broker | Order authority | Accidental or unauthorized live orders | Paper-first default, --live plus ALLOW_LIVE_TRADING=YES, deterministic loss/drawdown/leverage/size/freshness gates | Live mode remains financially consequential if explicitly enabled |
+| Market data → model/risk engine | Trading decisions | Corrupt, stale, malformed, or manipulated data | OHLCV validation, freshness checks, cached-data validation | Validation cannot establish that an external feed is truthful |
+| Runtime filesystem → model artifacts | Model integrity | Untrusted joblib/model replacement | Trusted-artifact guidance and restricted deployment assumptions | Filesystem compromise can defeat application-level trust |
+
+The threat model is intentionally explicit about residual risk: these controls reduce accidental or common failure modes but do not make live trading risk-free.
+
+### Primary mitigations
+
+- Paper trading is the default execution mode.
+- Live trading requires both --live and ALLOW_LIVE_TRADING=YES.
+- Risk limits gate loss, drawdown, leverage, position size, order notional, and stale data.
+- Broker credentials are read from environment variables rather than source files.
+- Security scans run in CI with Bandit, pip-audit, and CodeQL.
 
 ### What this project protects
 

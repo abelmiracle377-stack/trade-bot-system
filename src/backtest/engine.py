@@ -1,6 +1,6 @@
 """Vectorized + event-driven hybrid backtester."""
 
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, cast
 import numpy as np
 import pandas as pd
 from loguru import logger
@@ -13,10 +13,10 @@ class Trade:
     symbol: str
     entry_date: pd.Timestamp
     exit_date: Optional[pd.Timestamp]
-    side: int                  # +1 long, -1 short
+    side: int  # +1 long, -1 short
     entry_price: float
     exit_price: Optional[float]
-    size: float                # dollar notional
+    size: float  # dollar notional
     pnl: float = 0.0
     return_pct: float = 0.0
 
@@ -25,7 +25,7 @@ class Trade:
 class BacktestResult:
     equity_curve: pd.Series
     trades: List[Trade]
-    metrics: Dict[str, float]
+    metrics: Dict[str, float | int]
     positions: pd.DataFrame = field(default_factory=pd.DataFrame)
 
 
@@ -52,17 +52,19 @@ class Backtester:
 
     def run(
         self,
-        prices: Dict[str, pd.DataFrame],   # symbol → OHLCV
-        signals: Dict[str, pd.Series],     # symbol → signal series (+1/0/-1)
+        prices: Dict[str, pd.DataFrame],  # symbol → OHLCV
+        signals: Dict[str, pd.Series],  # symbol → signal series (+1/0/-1)
         feature_vols: Optional[Dict[str, pd.Series]] = None,
     ) -> BacktestResult:
         """
         prices and signals must share a common DatetimeIndex (aligned).
         """
         # Align all series on common dates
-        common_idx = None
+        common_idx: pd.Index | None = None
         for s in signals.values():
             common_idx = s.index if common_idx is None else common_idx.intersection(s.index)
+        if common_idx is None:
+            raise ValueError("No signal data supplied for backtest")
         for df in prices.values():
             common_idx = common_idx.intersection(df.index)
 
@@ -76,7 +78,7 @@ class Backtester:
 
         # Portfolio state
         cash = self.initial_capital
-        positions: Dict[str, float] = {s: 0.0 for s in symbols}   # shares
+        positions: Dict[str, float] = {s: 0.0 for s in symbols}  # shares
         entry_prices: Dict[str, float] = {s: 0.0 for s in symbols}
         entry_dates: Dict[str, Optional[pd.Timestamp]] = {s: None for s in symbols}
         sides: Dict[str, int] = {s: 0 for s in symbols}
@@ -99,7 +101,9 @@ class Backtester:
                     )
                     if hit:
                         # Close position
-                        exit_price = close[sym].iloc[i] * (1 - self.slippage_pct * np.sign(positions[sym]))
+                        exit_price = close[sym].iloc[i] * (
+                            1 - self.slippage_pct * np.sign(positions[sym])
+                        )
                         proceeds = positions[sym] * exit_price
                         commission = abs(proceeds) * self.commission_pct
                         cash += proceeds - commission
@@ -132,7 +136,9 @@ class Backtester:
 
                 # Close existing if any
                 if current_side != 0:
-                    exit_price = close[sym].iloc[i] * (1 - self.slippage_pct * np.sign(positions[sym]))
+                    exit_price = close[sym].iloc[i] * (
+                        1 - self.slippage_pct * np.sign(positions[sym])
+                    )
                     proceeds = positions[sym] * exit_price
                     commission = abs(proceeds) * self.commission_pct
                     cash += proceeds - commission
@@ -160,21 +166,31 @@ class Backtester:
                     else:
                         vol = 0.20  # fallback annualized vol
 
-                    dollar_size = self.risk_manager.volatility_target_size(
-                        asset_vol=vol, portfolio_value=port_value, signal=desired_side
-                    ) if self.risk_manager else (0.1 * port_value * desired_side)
+                    dollar_size = (
+                        self.risk_manager.volatility_target_size(
+                            asset_vol=vol, portfolio_value=port_value, signal=desired_side
+                        )
+                        if self.risk_manager
+                        else (0.1 * port_value * desired_side)
+                    )
 
                     if abs(dollar_size) < 100:  # min size filter
                         continue
 
-                    entry_price = close[sym].iloc[i] * (1 + self.slippage_pct * np.sign(dollar_size))
+                    entry_price = close[sym].iloc[i] * (
+                        1 + self.slippage_pct * np.sign(dollar_size)
+                    )
                     shares = dollar_size / entry_price
                     cost = abs(shares * entry_price)
                     commission = cost * self.commission_pct
 
                     if cost + commission > cash:
                         # Scale down to available cash
-                        shares = (cash * 0.95) / (entry_price * (1 + self.commission_pct)) * np.sign(dollar_size)
+                        shares = (
+                            (cash * 0.95)
+                            / (entry_price * (1 + self.commission_pct))
+                            * np.sign(dollar_size)
+                        )
                         cost = abs(shares * entry_price)
                         commission = cost * self.commission_pct
 
@@ -226,7 +242,7 @@ class Backtester:
             positions=pos_df,
         )
 
-    def _compute_metrics(self, equity: pd.Series, trades: List[Trade]) -> Dict[str, float]:
+    def _compute_metrics(self, equity: pd.Series, trades: List[Trade]) -> Dict[str, float | int]:
         if equity.empty or len(equity) < 2:
             return {}
 
@@ -246,7 +262,11 @@ class Backtester:
         win_rate = len(win_trades) / len(trades) if trades else 0.0
         avg_win = np.mean([t.pnl for t in win_trades]) if win_trades else 0.0
         avg_loss = np.mean([t.pnl for t in loss_trades]) if loss_trades else 0.0
-        profit_factor = abs(sum(t.pnl for t in win_trades) / sum(t.pnl for t in loss_trades)) if loss_trades and sum(t.pnl for t in loss_trades) != 0 else np.inf
+        profit_factor = (
+            abs(sum(t.pnl for t in win_trades) / sum(t.pnl for t in loss_trades))
+            if loss_trades and sum(t.pnl for t in loss_trades) != 0
+            else np.inf
+        )
         sortino = sortino_ratio(rets, risk_free_rate=0.04)
         calmar = calmar_ratio(cagr, max_dd)
         drawdown_duration = max_drawdown_duration(equity)
@@ -262,8 +282,8 @@ class Backtester:
             "max_drawdown_duration": float(drawdown_duration),
             "n_trades": len(trades),
             "win_rate": win_rate,
-            "avg_win": avg_win,
-            "avg_loss": avg_loss,
+            "avg_win": cast(float, avg_win),
+            "avg_loss": cast(float, avg_loss),
             "profit_factor": profit_factor,
-            "final_equity": equity.iloc[-1],
+            "final_equity": float(equity.iloc[-1]),
         }

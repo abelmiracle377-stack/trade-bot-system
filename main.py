@@ -178,19 +178,21 @@ def run_pipeline(config_path: str = "config/config.yaml"):
 
     # Save trades summary
     if result.trades:
-        trades_df = pd.DataFrame([
-            {
-                "symbol": t.symbol,
-                "entry": t.entry_date,
-                "exit": t.exit_date,
-                "side": "LONG" if t.side > 0 else "SHORT",
-                "entry_px": t.entry_price,
-                "exit_px": t.exit_price,
-                "pnl": t.pnl,
-                "return_pct": t.return_pct,
-            }
-            for t in result.trades
-        ])
+        trades_df = pd.DataFrame(
+            [
+                {
+                    "symbol": t.symbol,
+                    "entry": t.entry_date,
+                    "exit": t.exit_date,
+                    "side": "LONG" if t.side > 0 else "SHORT",
+                    "entry_px": t.entry_price,
+                    "exit_px": t.exit_price,
+                    "pnl": t.pnl,
+                    "return_pct": t.return_pct,
+                }
+                for t in result.trades
+            ]
+        )
         trades_df.to_csv("reports/trades.csv", index=False)
         logger.info(f"Trades saved → reports/trades.csv ({len(trades_df)} trades)")
 

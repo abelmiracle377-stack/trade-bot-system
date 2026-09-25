@@ -24,7 +24,7 @@ def test_long_trade_does_not_double_charge_cash():
         )
     }
     signal = pd.Series(0, index=dates, dtype=int)
-    signal.iloc[2:4] = 1
+    signal.iloc[1:4] = 1
 
     risk = RiskManager(max_position_pct=0.20, stop_loss_pct=0.50, max_drawdown_pct=0.90)
     result = Backtester(
@@ -54,7 +54,7 @@ def test_short_trade_cash_accounting_is_symmetric():
         )
     }
     signal = pd.Series(0, index=dates, dtype=int)
-    signal.iloc[2:4] = -1
+    signal.iloc[1:4] = -1
 
     risk = RiskManager(
         max_position_pct=0.20,

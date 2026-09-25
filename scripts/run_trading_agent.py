@@ -12,8 +12,12 @@ Never put broker credentials in source control.
 from __future__ import annotations
 
 import argparse
+import json
 from datetime import datetime, timezone
+from pathlib import Path
 from uuid import uuid4
+
+from loguru import logger
 
 from src.data import DataFetcher
 from src.features import FeatureEngineer
@@ -28,7 +32,7 @@ from src.execution import (
 from src.utils import assert_valid_config, load_config, setup_logger
 
 
-def run(config_path: str = "config/config.yaml", *, live: bool = False) -> None:
+def _run_cycle(config_path: str = "config/config.yaml", *, live: bool = False) -> None:
     cfg = load_config(config_path)
     assert_valid_config(cfg)
     setup_logger(
@@ -53,12 +57,8 @@ def run(config_path: str = "config/config.yaml", *, live: bool = False) -> None:
     now = datetime.now(timezone.utc)
     account_equity = broker.account_equity()
     start_of_day_equity = broker.previous_day_equity()
-    state_store = RiskStateStore(
-        cfg["risk"].get("state_file", "data/runtime/trading_state.json")
-    )
-    state = state_store.load_or_initialize(
-        now.date(), max(account_equity, start_of_day_equity)
-    )
+    state_store = RiskStateStore(cfg["risk"].get("state_file", "data/runtime/trading_state.json"))
+    state = state_store.load_or_initialize(now.date(), max(account_equity, start_of_day_equity))
     peak_equity = max(state.peak_equity, account_equity)
     state.peak_equity = peak_equity
     state_store.save(state)
@@ -81,9 +81,7 @@ def run(config_path: str = "config/config.yaml", *, live: bool = False) -> None:
     learning_cfg = cfg.get("learning", {})
     learning_enabled = bool(learning_cfg.get("enabled", True))
     learning_store = SignalOutcomeStore(
-        learning_cfg.get(
-            "store_file", "data/runtime/learning/signal_outcomes.jsonl"
-        )
+        learning_cfg.get("store_file", "data/runtime/learning/signal_outcomes.jsonl")
     )
     learner = FeedbackLearner(
         learning_store,
@@ -128,9 +126,7 @@ def run(config_path: str = "config/config.yaml", *, live: bool = False) -> None:
         probabilities = predictor.predict_proba(featured)
         base_probability = float(probabilities.iloc[-1])
         latest_probability = (
-            learner.adjust_probability(base_probability)
-            if learning_enabled
-            else base_probability
+            learner.adjust_probability(base_probability) if learning_enabled else base_probability
         )
         threshold = strat_cfg.get("signal_threshold", 0.55)
         short_threshold = strat_cfg.get("short_threshold", 0.45)
@@ -178,6 +174,32 @@ def run(config_path: str = "config/config.yaml", *, live: bool = False) -> None:
             peak_equity = max(peak_equity, broker.account_equity())
             state.peak_equity = peak_equity
             state_store.save(state)
+
+
+def _write_run_status(path: str, *, status: str, error: str | None = None) -> None:
+    """Persist the latest agent-cycle status for local/CI health checks."""
+    target = Path(path)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "status": status,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
+    if error:
+        payload["error"] = error
+    target.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+
+
+def run(config_path: str = "config/config.yaml", *, live: bool = False) -> None:
+    """Run one cycle and persist success/failure status without hiding failures."""
+    status_path = "data/runtime/last_run_status.json"
+    try:
+        _run_cycle(config_path, live=live)
+    except Exception as exc:
+        logger.exception("Trading agent cycle failed: {}", exc)
+        _write_run_status(status_path, status="failed", error=str(exc))
+        raise
+    else:
+        _write_run_status(status_path, status="success")
 
 
 def main() -> None:

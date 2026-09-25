@@ -47,9 +47,7 @@ def test_market_data_to_model_to_backtest_pipeline():
     # Keep only features with finite values so the model receives the
     # same kind of clean rows expected after feature generation.
     usable = features[feature_columns].replace([np.inf, -np.inf], np.nan)
-    feature_columns = [
-        column for column in feature_columns if usable[column].notna().any()
-    ]
+    feature_columns = [column for column in feature_columns if usable[column].notna().any()]
 
     predictor = SignalPredictor(
         model_type="random_forest",

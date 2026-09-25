@@ -37,7 +37,11 @@ def validate_config(cfg: Dict[str, Any]) -> List[str]:
         errors.append("'model.target_horizon' must be an integer between 1 and 60")
 
     train_split = model.get("train_test_split", 0.8)
-    if isinstance(train_split, bool) or not isinstance(train_split, (int, float)) or not 0 < train_split < 1:
+    if (
+        isinstance(train_split, bool)
+        or not isinstance(train_split, (int, float))
+        or not 0 < train_split < 1
+    ):
         errors.append("'model.train_test_split' must be a number in (0, 1)")
 
     risk = cfg.get("risk", {})

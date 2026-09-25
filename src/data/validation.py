@@ -54,15 +54,12 @@ def validate_ohlcv(
             errors.append("OHLC prices must be positive")
         if require_volume and (numeric["Volume"] < 0).any():
             errors.append("Volume cannot be negative")
-        valid_ohlc = (
-            (numeric["High"] >= numeric[["Open", "Close"]].max(axis=1))
-            & (numeric["Low"] <= numeric[["Open", "Close"]].min(axis=1))
+        valid_ohlc = (numeric["High"] >= numeric[["Open", "Close"]].max(axis=1)) & (
+            numeric["Low"] <= numeric[["Open", "Close"]].min(axis=1)
         )
         if not valid_ohlc.all():
             errors.append("OHLC relationship is invalid for at least one row")
         returns = numeric["Close"].pct_change().abs()
         if max_return_pct is not None and (returns > max_return_pct).any():
-            warnings.append(
-                f"Large absolute close-to-close return exceeds {max_return_pct:.0%}"
-            )
+            warnings.append(f"Large absolute close-to-close return exceeds {max_return_pct:.0%}")
     return DataQualityReport(not errors, errors, warnings)
