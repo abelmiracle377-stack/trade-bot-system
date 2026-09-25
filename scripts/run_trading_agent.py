@@ -13,10 +13,12 @@ from __future__ import annotations
 
 import argparse
 from datetime import datetime, timezone
+from uuid import uuid4
 
 from src.data import DataFetcher
 from src.features import FeatureEngineer
 from src.models import SignalPredictor
+from src.learning import FeedbackLearner, SignalOutcomeStore
 from src.execution import (
     AlpacaBroker,
     RiskStateStore,
@@ -76,6 +78,20 @@ def run(config_path: str = "config/config.yaml", *, live: bool = False) -> None:
     model_cfg = cfg["model"]
     strat_cfg = cfg["strategy"]
 
+    learning_cfg = cfg.get("learning", {})
+    learning_enabled = bool(learning_cfg.get("enabled", True))
+    learning_store = SignalOutcomeStore(
+        learning_cfg.get(
+            "store_file", "data/runtime/learning/signal_outcomes.jsonl"
+        )
+    )
+    learner = FeedbackLearner(
+        learning_store,
+        min_samples=int(learning_cfg.get("min_samples", 40)),
+        blend_weight=float(learning_cfg.get("blend_weight", 0.25)),
+        random_state=model_cfg.get("random_state", 42),
+    )
+
     for symbol in cfg["data"]["symbols"]:
         df = fetcher.fetch(
             symbol,
@@ -85,6 +101,17 @@ def run(config_path: str = "config/config.yaml", *, live: bool = False) -> None:
         )
         featured = engineer.transform(df)
         feature_cols = engineer.get_feature_columns(featured)
+
+        if learning_enabled:
+            learner.resolve_pending(symbol, featured)
+            learning_metrics = learner.fit()
+            logger.info(
+                "Learning state for {}: samples={}, active={}, metrics={}",
+                symbol,
+                int(learning_metrics.get("samples", 0)),
+                int(learning_metrics.get("active", 0)),
+                learning_metrics,
+            )
 
         predictor = SignalPredictor(
             model_type=model_cfg.get("type", "xgboost"),
@@ -99,7 +126,12 @@ def run(config_path: str = "config/config.yaml", *, live: bool = False) -> None:
         )
 
         probabilities = predictor.predict_proba(featured)
-        latest_probability = float(probabilities.iloc[-1])
+        base_probability = float(probabilities.iloc[-1])
+        latest_probability = (
+            learner.adjust_probability(base_probability)
+            if learning_enabled
+            else base_probability
+        )
         threshold = strat_cfg.get("signal_threshold", 0.55)
         short_threshold = strat_cfg.get("short_threshold", 0.45)
         allow_short = strat_cfg.get("allow_short", False)
@@ -117,10 +149,27 @@ def run(config_path: str = "config/config.yaml", *, live: bool = False) -> None:
         else:
             data_timestamp = latest_timestamp.to_pydatetime()
 
+        entry_price = float(featured["Close"].iloc[-1])
+        if learning_enabled and signal != 0:
+            learner.record_prediction(
+                signal_id=f"{symbol.lower()}-{uuid4().hex}",
+                symbol=symbol,
+                direction=signal,
+                probability=latest_probability,
+                entry_price=entry_price,
+                signal_time=latest_timestamp,
+                horizon_bars=int(model_cfg.get("target_horizon", 5)),
+                model_version=(
+                    f"{model_cfg.get('type', 'xgboost')}:"
+                    f"h{model_cfg.get('target_horizon', 5)}:"
+                    f"rs{model_cfg.get('random_state', 42)}"
+                ),
+            )
+
         result = agent.execute_signal(
             symbol=symbol,
             signal=signal,
-            price=float(featured["Close"].iloc[-1]),
+            price=entry_price,
             data_timestamp=data_timestamp,
             start_of_day_equity=start_of_day_equity,
             peak_equity=peak_equity,
