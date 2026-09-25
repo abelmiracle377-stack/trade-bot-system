@@ -26,8 +26,7 @@ install-dev:
 	python -m pip check
 
 lock:
-	python -m pip install --upgrade pip
-	python -m pip freeze > requirements-lock.txt
+	uv lock
 
 build:
 	python -m build
