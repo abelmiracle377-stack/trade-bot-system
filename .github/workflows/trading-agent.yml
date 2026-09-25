@@ -33,6 +33,14 @@ jobs:
           python-version: "3.11"
           cache: "pip"
 
+      - name: Restore learning state
+        uses: actions/cache@v4
+        with:
+          path: data/runtime/learning
+          key: trading-learning-v1-${{ github.ref_name }}-${{ github.run_id }}
+          restore-keys: |
+            trading-learning-v1-${{ github.ref_name }}-
+
       - name: Install pinned dependencies
         run: |
           python -m pip install --upgrade pip
