@@ -1,0 +1,2 @@
+# Optional Telegram interface dependency. Keep separate from core runtime until deployment is enabled.
+python-telegram-bot==22.8
