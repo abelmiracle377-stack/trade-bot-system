@@ -41,6 +41,12 @@ model:
     max_depth: 10
     min_samples_leaf: 20
 
+learning:
+  enabled: true
+  min_samples: 40
+  blend_weight: 0.25
+  store_file: "data/runtime/learning/signal_outcomes.jsonl"
+
 strategy:
   signal_threshold: 0.55   # probability threshold for long signal
   short_threshold: 0.45    # probability threshold for short (if enabled)
