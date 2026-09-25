@@ -1,0 +1,30 @@
+name: Refresh uv lockfile
+
+on:
+  push:
+    branches: [hardening/datafactor-readiness]
+
+permissions:
+  contents: write
+
+jobs:
+  lock:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v7
+        with:
+          version: "0.12.19"
+      - run: uv lock
+      - name: Commit lockfile
+        run: |
+          git add uv.lock
+          if git diff --cached --quiet; then
+            echo "uv.lock is already current"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: refresh uv lockfile"
+          git push
