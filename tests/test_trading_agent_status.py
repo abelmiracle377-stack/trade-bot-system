@@ -6,7 +6,7 @@ import scripts.run_trading_agent as trading_agent
 
 
 def test_run_writes_success_status(tmp_path, monkeypatch):
-    status_path = tmp_path / "status.json"
+    status_path = tmp_path / "data" / "runtime" / "last_run_status.json"
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(trading_agent, "_run_cycle", lambda *args, **kwargs: None)
 
@@ -18,7 +18,7 @@ def test_run_writes_success_status(tmp_path, monkeypatch):
 
 
 def test_run_writes_failure_status_and_reraises(tmp_path, monkeypatch):
-    status_path = tmp_path / "status.json"
+    status_path = tmp_path / "data" / "runtime" / "last_run_status.json"
 
     def fail(*args, **kwargs):
         raise RuntimeError("broker unavailable")
