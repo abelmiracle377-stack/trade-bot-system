@@ -46,7 +46,7 @@ def test_resolve_pending_outcome(tmp_path):
     assert learner.resolve_pending("AAPL", data) == 1
     resolved = store.latest()[0]
     assert resolved.outcome == "win"
-    assert resolved.realized_return == 0.05
+    assert round(resolved.realized_return, 10) == 0.05
 
 
 def test_calibrator_only_activates_after_validation(tmp_path):
