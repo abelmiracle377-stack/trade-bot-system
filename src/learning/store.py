@@ -47,7 +47,7 @@ class SignalOutcomeStore:
             return []
         records: list[SignalOutcome] = []
         with self.path.open("r", encoding="utf-8") as handle:
-            for line in self.path.open("r", encoding="utf-8"):
+            for line in handle:
                 if line.strip():
                     records.append(SignalOutcome(**json.loads(line)))
         return records
