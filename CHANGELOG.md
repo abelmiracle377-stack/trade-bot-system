@@ -1,5 +1,12 @@
 # Changelog
 
+## [Unreleased]
+
+### Hardened
+- Fail-fast configuration loading with stricter symbol, model, risk, and backtest validation.
+- Structured logging now writes machine-parseable JSON Lines with `run_id` context.
+- Expanded validation and structured-logging regression tests.
+
 All notable changes to this project will be documented here.
 
 ## [0.2.1] - 2026-09-24
