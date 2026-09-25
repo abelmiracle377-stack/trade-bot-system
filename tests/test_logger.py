@@ -1,5 +1,7 @@
 """Tests for structured logger setup."""
 
+import json
+
 from loguru import logger
 
 from src.utils.logger import setup_logger
@@ -21,6 +23,7 @@ def test_setup_logger_structured_mode(tmp_path):
     setup_logger(level="DEBUG", log_file=str(log_file), structured=True, run_id="json_run")
     logger.info("Structured message")
     logger.complete()
-    assert log_file.exists()
-    content = log_file.read_text()
-    assert "Structured message" in content
+    line = log_file.read_text(encoding="utf-8").strip().splitlines()[0]
+    payload = json.loads(line)
+    assert payload["record"]["message"] == "Structured message"
+    assert payload["record"]["extra"]["run_id"] == "json_run"
