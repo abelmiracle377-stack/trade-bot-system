@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+- Outcome-driven feedback learning that records model signals, resolves forward outcomes, and trains a chronologically validated probability calibrator.
+- Persistent learning state for the paper-trading workflow via GitHub Actions cache.
+
 ### Hardened
 - Fail-fast configuration loading with stricter symbol, model, risk, and backtest validation.
 - Structured logging now writes machine-parseable JSON Lines with `run_id` context.
