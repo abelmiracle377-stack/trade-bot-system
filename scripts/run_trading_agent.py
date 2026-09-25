@@ -13,10 +13,12 @@ from __future__ import annotations
 
 import argparse
 from datetime import datetime, timezone
+from uuid import uuid4
 
 from src.data import DataFetcher
 from src.features import FeatureEngineer
 from src.models import SignalPredictor
+from src.learning import FeedbackLearner, SignalOutcomeStore
 from src.execution import (
     AlpacaBroker,
     RiskStateStore,
@@ -75,6 +77,20 @@ def run(config_path: str = "config/config.yaml", *, live: bool = False) -> None:
     )
     model_cfg = cfg["model"]
     strat_cfg = cfg["strategy"]
+
+    learning_cfg = cfg.get("learning", {})
+    learning_enabled = bool(learning_cfg.get("enabled", True))
+    learning_store = SignalOutcomeStore(
+        learning_cfg.get(
+            "store_file", "data/runtime/learning/signal_outcomes.jsonl"
+        )
+    )
+    learner = FeedbackLearner(
+        learning_store,
+        min_samples=int(learning_cfg.get("min_samples", 40)),
+        blend_weight=float(learning_cfg.get("blend_weight", 0.25)),
+        random_state=model_cfg.get("random_state", 42),
+    )
 
     for symbol in cfg["data"]["symbols"]:
         df = fetcher.fetch(
