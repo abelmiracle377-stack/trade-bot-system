@@ -283,7 +283,7 @@ trade-bot-system/
 │   ├── execution/     # broker + trading agent
 │   ├── accounts/      # multi-user permission foundation
 │   ├── telegram/      # Telegram integration foundation
-│   ├── learning/      # signal outcome storage
+│   ├── learning/      # outcome-driven feedback learning
 │   └── utils/         # validation, logging, walk-forward tools
 │
 ├── scripts/
@@ -398,7 +398,7 @@ Live credentials must never be committed to the repository or pasted into issues
 - [x] Model metadata and feature importance
 - [x] Paper-trading broker adapter
 - [x] Automated GitHub Actions paper-trading workflow
-- [x] Telegram / multi-user foundation
+- [x] Telegram / multi-user foundation\n- [x] Outcome-driven feedback learning
 
 ### Next platform layer
 - [x] Web monitoring dashboard
@@ -444,7 +444,7 @@ make docker-run
 - [Contributing](CONTRIBUTING.md)
 - [Changelog](CHANGELOG.md)
 - [Telegram / multi-user foundation](docs/TELEGRAM_MULTI_USER.md)
-- [Trading agent workflow](.github/workflows/trading-agent.yml)
+- [Trading agent workflow](.github/workflows/trading-agent.yml)\n- [Outcome-driven learning](docs/LEARNING.md)
 - [Configuration](config/config.yaml)
 
 ---
