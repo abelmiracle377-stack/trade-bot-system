@@ -126,7 +126,12 @@ def run(config_path: str = "config/config.yaml", *, live: bool = False) -> None:
         )
 
         probabilities = predictor.predict_proba(featured)
-        latest_probability = float(probabilities.iloc[-1])
+        base_probability = float(probabilities.iloc[-1])
+        latest_probability = (
+            learner.adjust_probability(base_probability)
+            if learning_enabled
+            else base_probability
+        )
         threshold = strat_cfg.get("signal_threshold", 0.55)
         short_threshold = strat_cfg.get("short_threshold", 0.45)
         allow_short = strat_cfg.get("allow_short", False)
