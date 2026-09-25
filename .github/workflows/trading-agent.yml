@@ -1,0 +1,54 @@
+name: Trading Agent
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Run after the U.S. market close on weekdays.
+    - cron: "30 21 * * 1-5"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: trading-agent
+  cancel-in-progress: false
+
+jobs:
+  paper-trading:
+    name: Run paper-trading agent
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      ALPACA_API_KEY: ${{ secrets.ALPACA_PAPER_API_KEY }}
+      ALPACA_API_SECRET: ${{ secrets.ALPACA_PAPER_API_SECRET }}
+      ALLOW_LIVE_TRADING: "NO"
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install pinned dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-lock.txt
+          python -m pip check
+
+      - name: Run paper-trading cycle
+        run: python scripts/run_trading_agent.py
+
+      - name: Upload agent logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trading-agent-logs-${{ github.run_id }}
+          path: |
+            logs/
+            data/runtime/
+          if-no-files-found: ignore
+          retention-days: 14
