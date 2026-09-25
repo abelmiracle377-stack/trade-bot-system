@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 from types import SimpleNamespace
 
 import pandas as pd
@@ -82,8 +83,12 @@ def test_run_experiment_writes_a_reproducible_ledger_entry(tmp_path, monkeypatch
     )
     monkeypatch.setattr(experiment, "setup_logger", lambda **kwargs: None)
 
+    config_path = tmp_path.parent.parent / "config" / "config.yaml"
+    if not config_path.exists():
+        config_path = Path(__file__).resolve().parents[1] / "config" / "config.yaml"
+
     record = experiment.run_experiment(
-        "/unused/config.yaml",
+        str(config_path),
         run_id="test_experiment_001",
     )
 
