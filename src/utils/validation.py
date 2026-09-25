@@ -70,6 +70,4 @@ def assert_valid_config(cfg: Dict[str, Any]) -> None:
     """Raise ValueError if config is invalid."""
     errors = validate_config(cfg)
     if errors:
-        raise ValueError("Invalid configuration:
-  - " + "
-  - ".join(errors))
+        raise ValueError("Invalid configuration:\n  - " + "\n  - ".join(errors))
