@@ -242,7 +242,7 @@ class Backtester:
             positions=pos_df,
         )
 
-    def _compute_metrics(self, equity: pd.Series, trades: List[Trade]) -> Dict[str, float]:
+    def _compute_metrics(self, equity: pd.Series, trades: List[Trade]) -> Dict[str, float | int]:
         if equity.empty or len(equity) < 2:
             return {}
 
