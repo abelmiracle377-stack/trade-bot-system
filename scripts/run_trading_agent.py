@@ -15,6 +15,8 @@ import argparse
 from datetime import datetime, timezone
 from uuid import uuid4
 
+from loguru import logger
+
 from src.data import DataFetcher
 from src.features import FeatureEngineer
 from src.models import SignalPredictor
@@ -48,8 +50,6 @@ def run(config_path: str = "config/config.yaml", *, live: bool = False) -> None:
         ),
     )
 
-    # Alpaca exposes the previous account equity, so the daily-loss baseline
-    # survives process restarts. The peak is persisted locally across cycles.
     now = datetime.now(timezone.utc)
     account_equity = broker.account_equity()
     start_of_day_equity = broker.previous_day_equity()
