@@ -31,9 +31,7 @@ class AlpacaBroker:
         key = os.getenv("ALPACA_API_KEY")
         secret = os.getenv("ALPACA_API_SECRET")
         if not key or not secret:
-            raise RuntimeError(
-                "ALPACA_API_KEY and ALPACA_API_SECRET must be set"
-            )
+            raise RuntimeError("ALPACA_API_KEY and ALPACA_API_SECRET must be set")
 
         if not paper and os.getenv("ALLOW_LIVE_TRADING") != "YES":
             raise RuntimeError(
@@ -67,8 +65,7 @@ class AlpacaBroker:
     def gross_exposure(self, _price: float | None = None) -> float:
         """Return total gross market-value exposure across all positions."""
         return sum(
-            abs(float(position.market_value))
-            for position in self.client.get_all_positions()
+            abs(float(position.market_value)) for position in self.client.get_all_positions()
         )
 
     def has_open_order(self, symbol: str) -> bool:

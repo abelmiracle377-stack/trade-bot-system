@@ -16,9 +16,9 @@ def _append_resolved(store, index: int, probability: float, outcome: str) -> Non
             exit_price=105.0 if outcome == "win" else 95.0,
             realized_return=0.05 if outcome == "win" else -0.05,
             outcome=outcome,
-            signal_time=pd.Timestamp("2025-01-01", tz="UTC").__add__(
-                pd.Timedelta(days=index)
-            ).isoformat(),
+            signal_time=pd.Timestamp("2025-01-01", tz="UTC")
+            .__add__(pd.Timedelta(days=index))
+            .isoformat(),
             horizon_bars=1,
             model_version="test",
         )

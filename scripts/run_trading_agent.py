@@ -57,12 +57,8 @@ def _run_cycle(config_path: str = "config/config.yaml", *, live: bool = False) -
     now = datetime.now(timezone.utc)
     account_equity = broker.account_equity()
     start_of_day_equity = broker.previous_day_equity()
-    state_store = RiskStateStore(
-        cfg["risk"].get("state_file", "data/runtime/trading_state.json")
-    )
-    state = state_store.load_or_initialize(
-        now.date(), max(account_equity, start_of_day_equity)
-    )
+    state_store = RiskStateStore(cfg["risk"].get("state_file", "data/runtime/trading_state.json"))
+    state = state_store.load_or_initialize(now.date(), max(account_equity, start_of_day_equity))
     peak_equity = max(state.peak_equity, account_equity)
     state.peak_equity = peak_equity
     state_store.save(state)
@@ -85,9 +81,7 @@ def _run_cycle(config_path: str = "config/config.yaml", *, live: bool = False) -
     learning_cfg = cfg.get("learning", {})
     learning_enabled = bool(learning_cfg.get("enabled", True))
     learning_store = SignalOutcomeStore(
-        learning_cfg.get(
-            "store_file", "data/runtime/learning/signal_outcomes.jsonl"
-        )
+        learning_cfg.get("store_file", "data/runtime/learning/signal_outcomes.jsonl")
     )
     learner = FeedbackLearner(
         learning_store,
@@ -132,9 +126,7 @@ def _run_cycle(config_path: str = "config/config.yaml", *, live: bool = False) -
         probabilities = predictor.predict_proba(featured)
         base_probability = float(probabilities.iloc[-1])
         latest_probability = (
-            learner.adjust_probability(base_probability)
-            if learning_enabled
-            else base_probability
+            learner.adjust_probability(base_probability) if learning_enabled else base_probability
         )
         threshold = strat_cfg.get("signal_threshold", 0.55)
         short_threshold = strat_cfg.get("short_threshold", 0.45)
@@ -208,6 +200,7 @@ def run(config_path: str = "config/config.yaml", *, live: bool = False) -> None:
         raise
     else:
         _write_run_status(status_path, status="success")
+
 
 def main() -> None:
     parser = argparse.ArgumentParser()

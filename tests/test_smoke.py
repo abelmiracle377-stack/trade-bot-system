@@ -4,6 +4,7 @@ These prove the package is importable and the basic pipeline pieces load
 without any network or external services.
 """
 
+
 def test_imports():
     """Core modules can be imported."""
     from src.data.fetcher import DataFetcher
@@ -30,6 +31,7 @@ def test_imports():
 def test_config_loads():
     """Config file exists and can be loaded."""
     from src.utils.config import load_config
+
     cfg = load_config("config/config.yaml")
     assert "data" in cfg
     assert "model" in cfg
@@ -42,6 +44,7 @@ def test_config_loads():
 def test_feature_engineer_basic():
     """FeatureEngineer can be instantiated and has expected attributes."""
     from src.features.engineer import FeatureEngineer
+
     eng = FeatureEngineer()
     assert hasattr(eng, "transform")
     assert hasattr(eng, "get_feature_columns")

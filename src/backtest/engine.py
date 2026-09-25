@@ -13,10 +13,10 @@ class Trade:
     symbol: str
     entry_date: pd.Timestamp
     exit_date: Optional[pd.Timestamp]
-    side: int                  # +1 long, -1 short
+    side: int  # +1 long, -1 short
     entry_price: float
     exit_price: Optional[float]
-    size: float                # dollar notional
+    size: float  # dollar notional
     pnl: float = 0.0
     return_pct: float = 0.0
 
@@ -52,8 +52,8 @@ class Backtester:
 
     def run(
         self,
-        prices: Dict[str, pd.DataFrame],   # symbol → OHLCV
-        signals: Dict[str, pd.Series],     # symbol → signal series (+1/0/-1)
+        prices: Dict[str, pd.DataFrame],  # symbol → OHLCV
+        signals: Dict[str, pd.Series],  # symbol → signal series (+1/0/-1)
         feature_vols: Optional[Dict[str, pd.Series]] = None,
     ) -> BacktestResult:
         """
@@ -76,7 +76,7 @@ class Backtester:
 
         # Portfolio state
         cash = self.initial_capital
-        positions: Dict[str, float] = {s: 0.0 for s in symbols}   # shares
+        positions: Dict[str, float] = {s: 0.0 for s in symbols}  # shares
         entry_prices: Dict[str, float] = {s: 0.0 for s in symbols}
         entry_dates: Dict[str, Optional[pd.Timestamp]] = {s: None for s in symbols}
         sides: Dict[str, int] = {s: 0 for s in symbols}
@@ -99,7 +99,9 @@ class Backtester:
                     )
                     if hit:
                         # Close position
-                        exit_price = close[sym].iloc[i] * (1 - self.slippage_pct * np.sign(positions[sym]))
+                        exit_price = close[sym].iloc[i] * (
+                            1 - self.slippage_pct * np.sign(positions[sym])
+                        )
                         proceeds = positions[sym] * exit_price
                         commission = abs(proceeds) * self.commission_pct
                         cash += proceeds - commission
@@ -132,7 +134,9 @@ class Backtester:
 
                 # Close existing if any
                 if current_side != 0:
-                    exit_price = close[sym].iloc[i] * (1 - self.slippage_pct * np.sign(positions[sym]))
+                    exit_price = close[sym].iloc[i] * (
+                        1 - self.slippage_pct * np.sign(positions[sym])
+                    )
                     proceeds = positions[sym] * exit_price
                     commission = abs(proceeds) * self.commission_pct
                     cash += proceeds - commission
@@ -160,21 +164,31 @@ class Backtester:
                     else:
                         vol = 0.20  # fallback annualized vol
 
-                    dollar_size = self.risk_manager.volatility_target_size(
-                        asset_vol=vol, portfolio_value=port_value, signal=desired_side
-                    ) if self.risk_manager else (0.1 * port_value * desired_side)
+                    dollar_size = (
+                        self.risk_manager.volatility_target_size(
+                            asset_vol=vol, portfolio_value=port_value, signal=desired_side
+                        )
+                        if self.risk_manager
+                        else (0.1 * port_value * desired_side)
+                    )
 
                     if abs(dollar_size) < 100:  # min size filter
                         continue
 
-                    entry_price = close[sym].iloc[i] * (1 + self.slippage_pct * np.sign(dollar_size))
+                    entry_price = close[sym].iloc[i] * (
+                        1 + self.slippage_pct * np.sign(dollar_size)
+                    )
                     shares = dollar_size / entry_price
                     cost = abs(shares * entry_price)
                     commission = cost * self.commission_pct
 
                     if cost + commission > cash:
                         # Scale down to available cash
-                        shares = (cash * 0.95) / (entry_price * (1 + self.commission_pct)) * np.sign(dollar_size)
+                        shares = (
+                            (cash * 0.95)
+                            / (entry_price * (1 + self.commission_pct))
+                            * np.sign(dollar_size)
+                        )
                         cost = abs(shares * entry_price)
                         commission = cost * self.commission_pct
 
@@ -246,7 +260,11 @@ class Backtester:
         win_rate = len(win_trades) / len(trades) if trades else 0.0
         avg_win = np.mean([t.pnl for t in win_trades]) if win_trades else 0.0
         avg_loss = np.mean([t.pnl for t in loss_trades]) if loss_trades else 0.0
-        profit_factor = abs(sum(t.pnl for t in win_trades) / sum(t.pnl for t in loss_trades)) if loss_trades and sum(t.pnl for t in loss_trades) != 0 else np.inf
+        profit_factor = (
+            abs(sum(t.pnl for t in win_trades) / sum(t.pnl for t in loss_trades))
+            if loss_trades and sum(t.pnl for t in loss_trades) != 0
+            else np.inf
+        )
         sortino = sortino_ratio(rets, risk_free_rate=0.04)
         calmar = calmar_ratio(cagr, max_dd)
         drawdown_duration = max_drawdown_duration(equity)

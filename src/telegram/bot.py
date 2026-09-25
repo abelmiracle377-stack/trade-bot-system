@@ -19,7 +19,9 @@ class TradingTelegramHandlers:
         user_id = self.authorizer.require_registered(telegram_user_id)
         return f"Trading account {user_id}: interface connected; execution state requires broker service."
 
-    def register_command(self, name: str, handler: Callable[..., str]) -> tuple[str, Callable[..., str]]:
+    def register_command(
+        self, name: str, handler: Callable[..., str]
+    ) -> tuple[str, Callable[..., str]]:
         if not name.startswith("/"):
             raise ValueError("command must start with /")
         return name, handler

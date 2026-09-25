@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 from src.models.predictor import SignalPredictor
 
+
 def test_target_uses_future_close_without_mutating_features():
     dates = pd.date_range("2020-01-01", periods=30, freq="D")
     close = np.arange(100.0, 130.0)

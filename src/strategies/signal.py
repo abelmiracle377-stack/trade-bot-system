@@ -32,5 +32,7 @@ class SignalGenerator:
 
         n_long = (signal == 1).sum()
         n_short = (signal == -1).sum()
-        logger.debug(f"Signals generated → Long: {n_long}, Short: {n_short}, Flat: {(signal == 0).sum()}")
+        logger.debug(
+            f"Signals generated → Long: {n_long}, Short: {n_short}, Flat: {(signal == 0).sum()}"
+        )
         return signal

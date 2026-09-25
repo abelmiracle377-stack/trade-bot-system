@@ -97,4 +97,7 @@ def test_run_experiment_writes_a_reproducible_ledger_entry(tmp_path, monkeypatch
 
     assert ledger.exists()
     assert summary.exists()
-    assert json.loads(ledger.read_text(encoding="utf-8").splitlines()[0])["run_id"] == "test_experiment_001"
+    assert (
+        json.loads(ledger.read_text(encoding="utf-8").splitlines()[0])["run_id"]
+        == "test_experiment_001"
+    )

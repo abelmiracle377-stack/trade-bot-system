@@ -47,9 +47,7 @@ def test_health_rejects_stale_success(tmp_path):
         json.dumps(
             {
                 "status": "success",
-                "timestamp": (
-                    datetime.now(timezone.utc) - timedelta(hours=40)
-                ).isoformat(),
+                "timestamp": (datetime.now(timezone.utc) - timedelta(hours=40)).isoformat(),
             }
         ),
         encoding="utf-8",
