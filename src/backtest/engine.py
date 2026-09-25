@@ -282,8 +282,8 @@ class Backtester:
             "max_drawdown_duration": float(drawdown_duration),
             "n_trades": len(trades),
             "win_rate": win_rate,
-            "avg_win": avg_win,
-            "avg_loss": avg_loss,
+            "avg_win": float(avg_win),
+            "avg_loss": float(avg_loss),
             "profit_factor": profit_factor,
             "final_equity": float(equity.iloc[-1]),
         }
