@@ -1,5 +1,4 @@
 import pandas as pd
-import pytest
 
 from src.learning.engine import FeedbackLearner
 from src.learning.store import SignalOutcome, SignalOutcomeStore
