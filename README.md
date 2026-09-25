@@ -128,7 +128,7 @@ Or:
 make ci
 ~~~
 
-The repository also commits uv.lock. To reproduce the development environment directly from that lockfile, install uv and run uv sync --locked --extra dev.
+The repository also commits uv.lock. To reproduce the development environment directly from that lockfile, install uv and run uv sync --locked --extra dev. The CI pipeline verifies that the lockfile remains synchronized with pyproject.toml.
 
 
 ### 4. Run the research pipeline
