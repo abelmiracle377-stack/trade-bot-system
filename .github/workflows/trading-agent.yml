@@ -50,6 +50,10 @@ jobs:
       - name: Run paper-trading cycle
         run: python scripts/run_trading_agent.py
 
+      - name: Verify agent health
+        if: success()
+        run: python scripts/check_health.py --max-age-hours 36
+
       - name: Upload agent logs
         if: always()
         uses: actions/upload-artifact@v4
