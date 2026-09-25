@@ -25,7 +25,7 @@ class Trade:
 class BacktestResult:
     equity_curve: pd.Series
     trades: List[Trade]
-    metrics: Dict[str, float]
+    metrics: Dict[str, float | int]
     positions: pd.DataFrame = field(default_factory=pd.DataFrame)
 
 
@@ -63,11 +63,11 @@ class Backtester:
         common_idx: pd.Index | None = None
         for s in signals.values():
             common_idx = s.index if common_idx is None else common_idx.intersection(s.index)
+        if common_idx is None:
+            raise ValueError("No signal data supplied for backtest")
         for df in prices.values():
             common_idx = common_idx.intersection(df.index)
 
-        if common_idx is None:
-            raise ValueError("No signal data supplied for backtest")
         common_idx = common_idx.sort_values()
         if len(common_idx) < 10:
             raise ValueError("Insufficient overlapping data for backtest")
