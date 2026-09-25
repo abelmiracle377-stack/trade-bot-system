@@ -1,9 +1,10 @@
-.PHONY: install install-dev build test integration lint format check ci clean run docker-build docker-test docker-run help
+.PHONY: install install-dev lock build test integration lint format check ci clean run health docker-build docker-test docker-run help
 
 help:
 	@echo "Available targets:"
 	@echo "  install       Install runtime dependencies"
 	@echo "  install-dev   Install runtime + development dependencies"
+	@echo "  lock          Refresh the pinned requirements lock file"
 	@echo "  build         Build the Python source distribution and wheel"
 	@echo "  test          Run the full test suite with coverage"
 	@echo "  integration   Run integration tests"
@@ -23,6 +24,10 @@ install:
 install-dev:
 	python -m pip install -r requirements-lock.txt
 	python -m pip check
+
+lock:
+	python -m pip install --upgrade pip
+	python -m pip freeze > requirements-lock.txt
 
 build:
 	python -m build
@@ -47,6 +52,9 @@ ci: install-dev build lint test
 
 run:
 	python main.py
+
+health:
+	python scripts/check_health.py
 
 docker-build:
 	docker build --target production -t ai-trading-system:latest .
