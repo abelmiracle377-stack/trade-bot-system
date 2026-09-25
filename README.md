@@ -109,9 +109,13 @@ source .venv/bin/activate          # Windows: .venv\\Scripts\\activate
 python -m pip install --upgrade pip
 python -m pip install -r requirements-lock.txt
 python -m pip check
+
+# Optional: reproduce the development environment from the native lockfile
+uv sync --locked --extra dev
+uv run --locked python -m pip check
 ~~~
 
-### 3. Build and test
+### 3. Verify the native lockfile and build/test
 
 ~~~bash
 python -m build
@@ -123,6 +127,9 @@ Or:
 ~~~bash
 make ci
 ~~~
+
+The repository also commits uv.lock. To reproduce the development environment directly from that lockfile, install uv and run uv sync --locked --extra dev.
+
 
 ### 4. Run the research pipeline
 
