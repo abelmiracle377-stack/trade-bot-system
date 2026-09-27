@@ -2,8 +2,17 @@ name: Trading Agent
 
 on:
   workflow_dispatch:
+    inputs:
+      mode:
+        description: "Execution mode"
+        required: true
+        default: "paper"
+        type: choice
+        options:
+          - paper
+          - live
   schedule:
-    # Run after the U.S. market close on weekdays.
+    # Scheduled runs remain paper trading by default.
     - cron: "30 21 * * 1-5"
 
 permissions:
@@ -14,16 +23,18 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  paper-trading:
-    name: Run paper-trading agent
+  trading-agent:
+    name: Run ${{ inputs.mode == 'live' && 'live' || 'paper' }} trading agent
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     env:
-      ALPACA_API_KEY: ${{ secrets.ALPACA_PAPER_API_KEY }}
-      ALPACA_API_SECRET: ${{ secrets.ALPACA_PAPER_API_SECRET }}
-      ALLOW_LIVE_TRADING: "NO"
+      MODE: ${{ inputs.mode || 'paper' }}
+      ALPACA_API_KEY: ${{ inputs.mode == 'live' && secrets.ALPACA_LIVE_API_KEY || secrets.ALPACA_PAPER_API_KEY }}
+      ALPACA_API_SECRET: ${{ inputs.mode == 'live' && secrets.ALPACA_LIVE_API_SECRET || secrets.ALPACA_PAPER_API_SECRET }}
+      ALLOW_LIVE_TRADING: ${{ inputs.mode == 'live' && secrets.LIVE_TRADING_APPROVED || 'NO' }}
       PYTHONUNBUFFERED: "1"
       PYTHONPATH: "."
+
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -48,14 +59,29 @@ jobs:
           python -m pip install -r requirements-lock.txt
           python -m pip check
 
-      - name: Run paper-trading cycle
-        run: python scripts/run_trading_agent.py
+      - name: Analyze stock and crypto markets
+        run: |
+          python scripts/analyze_market.py
+          echo "Generated signals:"
+          cat data/runtime/signals/latest.jsonl
+
+      - name: Run selected trading cycle
+        run: |
+          if [ "$MODE" = "live" ]; then
+            if [ "$ALLOW_LIVE_TRADING" != "YES" ]; then
+              echo "Live mode selected but LIVE_TRADING_APPROVED is not YES. Refusing live execution."
+              exit 1
+            fi
+            python scripts/run_trading_agent.py --live
+          else
+            python scripts/run_trading_agent.py
+          fi
 
       - name: Verify agent health
         if: success()
         run: python scripts/check_health.py --max-age-hours 36
 
-      - name: Upload agent logs
+      - name: Upload agent logs and signals
         if: always()
         uses: actions/upload-artifact@v4
         with:
