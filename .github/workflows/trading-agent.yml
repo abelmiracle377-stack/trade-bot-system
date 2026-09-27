@@ -32,6 +32,7 @@ jobs:
       ALPACA_API_KEY: ${{ inputs.mode == 'live' && secrets.ALPACA_LIVE_API_KEY || secrets.ALPACA_PAPER_API_KEY }}
       ALPACA_API_SECRET: ${{ inputs.mode == 'live' && secrets.ALPACA_LIVE_API_SECRET || secrets.ALPACA_PAPER_API_SECRET }}
       ALLOW_LIVE_TRADING: ${{ inputs.mode == 'live' && secrets.LIVE_TRADING_APPROVED || 'NO' }}
+      SIGNAL_WEBHOOK_URL: ${{ secrets.SIGNAL_WEBHOOK_URL }}
       PYTHONUNBUFFERED: "1"
       PYTHONPATH: "."
 
@@ -61,7 +62,11 @@ jobs:
 
       - name: Analyze stock and crypto markets
         run: |
-          python scripts/analyze_market.py
+          if [ -n "$SIGNAL_WEBHOOK_URL" ]; then
+            python scripts/analyze_market.py --send
+          else
+            python scripts/analyze_market.py
+          fi
           echo "Generated signals:"
           cat data/runtime/signals/latest.jsonl
 
