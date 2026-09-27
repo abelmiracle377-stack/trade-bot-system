@@ -38,7 +38,6 @@ jobs:
       - name: Lint with ruff
         run: |
           ruff check src/ tests/ main.py scripts/
-          ruff format --diff src/signals/market_agent.py
           ruff format --check src/ tests/ main.py scripts/
       - name: Type check with mypy
         run: mypy src/ --ignore-missing-imports
