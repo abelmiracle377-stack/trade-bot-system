@@ -69,11 +69,7 @@ class MarketSignalAgent:
 
     @staticmethod
     def asset_class(symbol: str) -> str:
-        return (
-            "crypto"
-            if symbol.upper().endswith(("-USD", "USDT", "BTC", "ETH"))
-            else "stock"
-        )
+        return "crypto" if symbol.upper().endswith(("-USD", "USDT", "BTC", "ETH")) else "stock"
 
     def analyze(
         self,
