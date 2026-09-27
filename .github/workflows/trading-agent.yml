@@ -23,6 +23,7 @@ jobs:
       ALPACA_API_SECRET: ${{ secrets.ALPACA_PAPER_API_SECRET }}
       ALLOW_LIVE_TRADING: "NO"
       PYTHONUNBUFFERED: "1"
+      PYTHONPATH: "."
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
