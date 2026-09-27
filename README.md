@@ -181,6 +181,44 @@ python scripts/analyze_market.py --send
 
 A signal is a model output, not a guarantee of future performance.
 
+## 📊 Live-trade analysis
+
+The agent also analyzes **positions that are already open** in the connected Alpaca account.
+
+For every open trade it records:
+
+- Long/short direction
+- Quantity
+- Average entry price
+- Current price
+- Market value
+- Unrealized P&L
+- Unrealized P&L percentage
+- Position status
+- Reason for the status
+- Analysis timestamp
+
+The monitor can produce:
+
+- **HOLD** — position is profitable and below the configured take-profit threshold.
+- **HOLD_RISK** — position is currently losing.
+- **TAKE_PROFIT_REVIEW** — configured profit threshold has been reached.
+- **EXIT_REVIEW** — configured loss threshold has been reached.
+
+Run against paper positions:
+
+```bash
+python scripts/monitor_live_trades.py
+```
+
+Run against the live account:
+
+```bash
+python scripts/monitor_live_trades.py --live
+```
+
+The live-trade monitor is intentionally **read-only**. It does not directly close or modify a position. Any execution remains subject to the trading agent's existing risk controls.
+
 ## 🔀 Two execution options
 
 ### 1. Paper Trading
