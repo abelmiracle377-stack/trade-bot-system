@@ -139,6 +139,76 @@ python main.py
 
 ---
 
+
+## 📡 Stock & crypto market-signal agent
+
+The repository now includes a separate **Market Signal Agent**. It analyzes configured equities and crypto assets using the same feature-engineering and ML stack, but it **does not place orders**.
+
+Example configured analysis universe:
+
+- Stocks: AAPL, MSFT, NVDA, SPY
+- Crypto: BTC-USD, ETH-USD, SOL-USD
+
+Run it locally:
+
+```bash
+python scripts/analyze_market.py
+```
+
+Signals are written to:
+
+```text
+data/runtime/signals/latest.jsonl
+```
+
+Each signal includes:
+
+- BUY / HOLD / SELL signal
+- probability of a positive forward return
+- confidence
+- latest price
+- asset class
+- model and prediction horizon
+- validation metrics
+- timestamp
+
+An optional HTTPS webhook can receive the signal batch:
+
+```bash
+export SIGNAL_WEBHOOK_URL="https://your-webhook.example/signal"
+python scripts/analyze_market.py --send
+```
+
+A signal is a model output, not a guarantee of future performance.
+
+## 🔀 Two execution options
+
+### 1. Paper Trading
+
+Paper mode is the default and is used by the scheduled GitHub Actions run. It uses paper Alpaca credentials and cannot submit live orders.
+
+### 2. Live Trading
+
+The workflow's manual **mode** selector includes a Live option. Live execution requires all of the following:
+
+1. Live Alpaca API credentials stored as GitHub Actions secrets.
+2. `LIVE_TRADING_APPROVED=YES` stored as a separate GitHub Actions secret.
+3. The workflow is manually dispatched with **mode = live**.
+4. The trading script is invoked with `--live`.
+
+If the approval gate is missing, the workflow stops before live execution.
+
+Recommended repository secrets:
+
+- `ALPACA_PAPER_API_KEY`
+- `ALPACA_PAPER_API_SECRET`
+- `ALPACA_LIVE_API_KEY`
+- `ALPACA_LIVE_API_SECRET`
+- `LIVE_TRADING_APPROVED`
+- `SIGNAL_WEBHOOK_URL` (optional)
+
+Live trading can lose money. The system provides risk controls and model signals; it does not guarantee profits or prediction accuracy.
+
 ## 🤖 Paper-trading agent
 
 The execution layer is deliberately **paper-first**.
