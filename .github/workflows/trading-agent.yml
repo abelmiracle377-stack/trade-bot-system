@@ -70,6 +70,14 @@ jobs:
           echo "Generated signals:"
           cat data/runtime/signals/latest.jsonl
 
+      - name: Analyze open trades
+        run: |
+          if [ "$MODE" = "live" ]; then
+            python scripts/monitor_live_trades.py --live
+          else
+            python scripts/monitor_live_trades.py
+          fi
+
       - name: Run selected trading cycle
         run: |
           if [ "$MODE" = "live" ]; then
