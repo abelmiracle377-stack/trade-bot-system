@@ -69,10 +69,20 @@ class MarketSignalAgent:
 
     @staticmethod
     def asset_class(symbol: str) -> str:
-        return "crypto" if symbol.upper().endswith(("-USD", "USDT", "BTC", "ETH")) else "stock"
+        return (
+            "crypto"
+            if symbol.upper().endswith(("-USD", "USDT", "BTC", "ETH"))
+            else "stock"
+        )
 
-    def analyze(self, symbol: str, *, start: str = "2018-01-01", end: str | None = None,
-                interval: str = "1d") -> MarketSignal:
+    def analyze(
+        self,
+        symbol: str,
+        *,
+        start: str = "2018-01-01",
+        end: str | None = None,
+        interval: str = "1d",
+    ) -> MarketSignal:
         df = self.fetcher.fetch(symbol, start=start, end=end, interval=interval)
         featured = self.engineer.transform(df)
         feature_cols = self.engineer.get_feature_columns(featured)
@@ -126,7 +136,10 @@ class MarketSignalAgent:
                 results.append(result)
                 logger.info(
                     "Signal {} {} probability_up={} confidence={}",
-                    result.symbol, result.signal, result.probability_up, result.confidence,
+                    result.symbol,
+                    result.signal,
+                    result.probability_up,
+                    result.confidence,
                 )
             except Exception as exc:
                 logger.exception("Signal analysis failed for {}: {}", symbol, exc)
