@@ -51,13 +51,22 @@ class LiveTradeMonitor:
         pnl_pct = pnl / (entry * abs(float(position.qty))) if entry > 0 else 0.0
 
         if pnl_pct <= -self.stop_loss_pct:
-            signal, reason = "EXIT_REVIEW", "position reached configured stop-loss threshold"
+            signal, reason = (
+                "EXIT_REVIEW",
+                "position reached configured stop-loss threshold",
+            )
         elif pnl_pct >= self.take_profit_pct:
-            signal, reason = "TAKE_PROFIT_REVIEW", "position reached configured take-profit threshold"
+            signal, reason = (
+                "TAKE_PROFIT_REVIEW",
+                "position reached configured take-profit threshold",
+            )
         elif pnl_pct < 0:
             signal, reason = "HOLD_RISK", "position is currently below entry"
         else:
-            signal, reason = "HOLD", "position remains profitable and below take-profit threshold"
+            signal, reason = (
+                "HOLD",
+                "position remains profitable and below take-profit threshold",
+            )
 
         return LiveTradeSignal(
             symbol=str(position.symbol),
