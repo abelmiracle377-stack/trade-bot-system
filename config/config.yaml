@@ -1,12 +1,22 @@
 # AI Trading System Configuration
 
 data:
+  # Symbols traded by the execution agent.
   symbols:
     - AAPL
     - MSFT
     - GOOGL
     - AMZN
     - NVDA
+  # Symbols analyzed by the signal agent. Crypto uses Yahoo Finance symbols.
+  analysis_symbols:
+    - AAPL
+    - MSFT
+    - NVDA
+    - SPY
+    - BTC-USD
+    - ETH-USD
+    - SOL-USD
   start_date: "2018-01-01"
   end_date: null          # null = today
   interval: "1d"
