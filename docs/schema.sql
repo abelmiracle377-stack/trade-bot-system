@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS users (id UUID PRIMARY KEY, email TEXT UNIQUE NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT now());
+CREATE TABLE IF NOT EXISTS subscriptions (id UUID PRIMARY KEY, user_id UUID NOT NULL REFERENCES users(id), plan TEXT NOT NULL, status TEXT NOT NULL, provider_customer_id TEXT, provider_subscription_id TEXT, created_at TIMESTAMPTZ NOT NULL DEFAULT now());
+CREATE TABLE IF NOT EXISTS broker_connections (id UUID PRIMARY KEY, user_id UUID NOT NULL REFERENCES users(id), broker TEXT NOT NULL, mode TEXT NOT NULL DEFAULT 'paper', status TEXT NOT NULL, credential_ref TEXT, created_at TIMESTAMPTZ NOT NULL DEFAULT now());
+CREATE TABLE IF NOT EXISTS orders (id UUID PRIMARY KEY, user_id UUID NOT NULL REFERENCES users(id), broker TEXT, mode TEXT NOT NULL, symbol TEXT NOT NULL, side TEXT NOT NULL, qty NUMERIC NOT NULL, price NUMERIC, status TEXT NOT NULL, external_order_id TEXT, created_at TIMESTAMPTZ NOT NULL DEFAULT now());
+CREATE TABLE IF NOT EXISTS positions (id UUID PRIMARY KEY, user_id UUID NOT NULL REFERENCES users(id), broker TEXT, mode TEXT NOT NULL, symbol TEXT NOT NULL, qty NUMERIC NOT NULL, avg_price NUMERIC, updated_at TIMESTAMPTZ NOT NULL DEFAULT now());
+CREATE TABLE IF NOT EXISTS audit_log (id BIGSERIAL PRIMARY KEY, user_id UUID, event TEXT NOT NULL, payload JSONB, created_at TIMESTAMPTZ NOT NULL DEFAULT now());
