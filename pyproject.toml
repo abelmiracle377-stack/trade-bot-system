@@ -22,6 +22,8 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
 ]
 dependencies = [
+    "fastapi==0.115.0",
+    "pydantic==2.9.2",
     "numpy==1.26.4",
     "pyarrow==23.0.1",
     "pandas==2.2.2",
