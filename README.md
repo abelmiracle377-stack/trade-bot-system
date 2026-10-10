@@ -181,6 +181,39 @@ python scripts/analyze_market.py --send
 
 A signal is a model output, not a guarantee of future performance.
 
+## 🤖 Run the continuous paper-trading bot
+
+The bot can run one risk-gated model-to-broker cycle or repeat on a schedule. It
+uses the configured symbols, ML model, persisted risk state, and Alpaca **paper**
+account. This runner deliberately has no live-mode switch.
+
+First configure paper credentials in your environment (never commit keys):
+
+```bash
+export ALPACA_API_KEY="your-paper-key"
+export ALPACA_API_SECRET="your-paper-secret"
+python scripts/run_paper_bot.py --once
+```
+
+If the one-cycle run succeeds, start hourly paper cycles:
+
+```bash
+python scripts/run_paper_bot.py --interval-seconds 3600
+```
+
+Useful options:
+
+- `--once`: run one cycle and exit.
+- `--interval-seconds 900`: wait at least 15 minutes between cycles (minimum 60 seconds).
+- `--max-cycles 4`: stop after four cycles.
+- `--config config/config.yaml`: use another configuration file.
+
+Stop it with Ctrl+C. Cycle health is written to
+`data/runtime/last_run_status.json`; logs are written using the configured
+logging path. A failed cycle is recorded and the runner waits for the next
+cycle rather than silently switching modes. Paper trading can still lose
+simulated money and does not demonstrate future live performance.
+
 ## 📊 Live-trade analysis
 
 The agent also analyzes **positions that are already open** in the connected Alpaca account.
